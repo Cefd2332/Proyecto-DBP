@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.e2e.e2e.driver.domain.Category;
 
-
+//AAAAAA
 @Entity
 @Data
 @NoArgsConstructor
