@@ -1,4 +1,4 @@
-package org.e2e.e2e.RegistroMedico;
+package org.e2e.e2e.RegistroSalud;
 
 import jakarta.persistence.*;
 import lombok.Data;

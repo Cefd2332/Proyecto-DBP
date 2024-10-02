@@ -3,7 +3,7 @@ package org.e2e.e2e.Animal;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.e2e.e2e.CitaVeterinaria.CitaVeterinaria;
-import org.e2e.e2e.RegistroMedico.RegistroSalud;
+import org.e2e.e2e.RegistroSalud.RegistroSalud;
 import org.e2e.e2e.UbicacionAnimal.UbicacionAnimal;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Vacuna.Vacuna;
