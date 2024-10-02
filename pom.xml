@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.e2e</groupId>
-    <artifactId>e2e</artifactId>
+    <artifactId>Proyecto</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>e2e</name>
     <description>e2e</description>
