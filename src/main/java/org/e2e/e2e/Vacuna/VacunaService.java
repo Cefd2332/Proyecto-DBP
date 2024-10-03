@@ -7,8 +7,10 @@ import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -71,5 +73,34 @@ public class VacunaService {
         responseDto.setFechaAplicacion(vacuna.getFechaAplicacion());
         responseDto.setAnimalId(vacuna.getAnimal().getId());
         return responseDto;
+    }
+
+    // Método programado para enviar recordatorios de vacunas
+    @Scheduled(cron = "0 0 8 * * ?") // Cada día a las 8 AM
+    public void enviarRecordatoriosVacunas() {
+        LocalDate today = LocalDate.now();
+        LocalDate nextWeek = today.plusDays(7);
+
+        // Buscar vacunas próximas
+        List<Vacuna> vacunasProximas = vacunaRepository.findVacunasProximas(today, nextWeek);
+
+        for (Vacuna vacuna : vacunasProximas) {
+            Usuario adoptante = vacuna.getAnimal().getAdoptante();
+            String emailSubject = "Recordatorio: Vacuna próxima para " + vacuna.getAnimal().getNombre();
+            String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
+                    "Recuerde que la vacuna " + vacuna.getNombre() + " de su mascota " + vacuna.getAnimal().getNombre() +
+                    " está programada para el " + vacuna.getFechaAplicacion() + ".\n\nSaludos,\n" +
+                    "Equipo de Adopción y Seguimiento de Animales";
+
+            // Enviar correo electrónico
+            eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
+
+            // Enviar notificación push
+            if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
+                String pushTitle = "Recordatorio de vacuna para " + vacuna.getAnimal().getNombre();
+                String pushBody = "La vacuna " + vacuna.getNombre() + " está programada para " + vacuna.getFechaAplicacion();
+                notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
+            }
+        }
     }
 }

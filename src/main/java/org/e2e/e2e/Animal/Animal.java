@@ -33,6 +33,9 @@ public class Animal {
     private Usuario adoptante;
 
     @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RegistroEstadoAnimal> registroEstadoAnimal = new ArrayList<>();
+
+    @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RegistroEstadoAnimal> historialEstados = new ArrayList<>();
 
     @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -46,4 +49,6 @@ public class Animal {
 
     @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vacuna> vacunas = new ArrayList<>();
+
+
 }

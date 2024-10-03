@@ -3,6 +3,9 @@ package org.e2e.e2e.Animal;
 import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Usuario.UsuarioRepository;
+import org.e2e.e2e.Notificacion.NotificacionPushService;
+import org.e2e.e2e.Email.EmailEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +17,8 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final UsuarioRepository usuarioRepository;
     private final RegistroEstadoAnimalRepository registroEstadoAnimalRepository;
+    private final NotificacionPushService notificacionPushService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // Obtener todos los animales
     public List<Animal> obtenerTodosLosAnimales() {
@@ -85,6 +90,21 @@ public class AnimalService {
 
         registroEstadoAnimalRepository.save(registroEstado);
 
+        // Enviar notificación push al adoptante si hay token disponible
+        String mensajeNotificacion = "El estado de salud de tu mascota " + animal.getNombre() + " ha cambiado a: " + nuevoEstado;
+        if (animal.getAdoptante().getToken() != null) {
+            notificacionPushService.enviarNotificacion(animal.getAdoptante().getToken(), "Cambio de estado de salud", mensajeNotificacion);
+        } else {
+            // Enviar notificación por correo electrónico si no hay token
+            String emailSubject = "Cambio de estado de salud para " + animal.getNombre();
+            String emailBody = "Estimado " + animal.getAdoptante().getNombre() + ",\n\n" +
+                    "El estado de salud de tu mascota ha cambiado a: " + nuevoEstado + ".\n\n" +
+                    "Saludos,\n" +
+                    "Equipo de Adopción y Seguimiento de Animales";
+
+            eventPublisher.publishEvent(new EmailEvent(animal.getAdoptante().getEmail(), emailSubject, emailBody));
+        }
+
         return animalRepository.save(animal);
     }
 
@@ -98,6 +118,24 @@ public class AnimalService {
         responseDto.setEstadoSalud(animal.getEstadoSalud());
         responseDto.setAdoptanteId(animal.getAdoptante().getId());
         responseDto.setEstadoActual(animal.getEstadoActual());  // Estado actual del animal
+        return responseDto;
+    }
+
+    // Obtener el historial de cambios de estado del animal
+    public List<RegistroEstadoAnimalResponseDto> obtenerHistorialEstados(Long animalId) {
+        Animal animal = obtenerAnimalPorId(animalId);
+        return animal.getRegistroEstadoAnimal().stream()
+                .map(this::convertirRegistroEstadoAResponseDto)
+                .toList();
+    }
+
+    // Conversión de RegistroEstadoAnimal a DTO
+    private RegistroEstadoAnimalResponseDto convertirRegistroEstadoAResponseDto(RegistroEstadoAnimal registroEstado) {
+        RegistroEstadoAnimalResponseDto responseDto = new RegistroEstadoAnimalResponseDto();
+        responseDto.setId(registroEstado.getId());
+        responseDto.setEstado(registroEstado.getEstado());
+        responseDto.setFechaCambio(registroEstado.getFechaCambio());
+        responseDto.setAnimalId(registroEstado.getAnimal().getId());
         return responseDto;
     }
 }

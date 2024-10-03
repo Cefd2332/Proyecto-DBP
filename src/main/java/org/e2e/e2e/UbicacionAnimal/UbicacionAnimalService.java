@@ -20,7 +20,7 @@ public class UbicacionAnimalService {
     private final UbicacionAnimalRepository ubicacionAnimalRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
-    private final NotificacionPushService notificacionPushService;  // Inyectamos el servicio de notificaciones push
+    private final NotificacionPushService notificacionPushService;  // Inyección de servicio de notificaciones push
 
     public List<UbicacionAnimalResponseDto> obtenerUbicaciones(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);

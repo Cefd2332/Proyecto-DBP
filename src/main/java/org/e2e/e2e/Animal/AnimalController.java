@@ -58,4 +58,11 @@ public class AnimalController {
         Animal animal = animalService.actualizarEstadoAnimal(id, nuevoEstado);
         return ResponseEntity.ok(animalService.convertirAnimalAResponseDto(animal));
     }
+
+    // Obtener el historial de cambios de estado del animal
+    @GetMapping("/{id}/historial-estados")
+    public ResponseEntity<List<RegistroEstadoAnimalResponseDto>> obtenerHistorialEstados(@PathVariable Long id) {
+        List<RegistroEstadoAnimalResponseDto> historial = animalService.obtenerHistorialEstados(id);
+        return ResponseEntity.ok(historial);
+    }
 }

@@ -1,4 +1,4 @@
-package org.e2e.e2e.config;
+package org.e2e.e2e.Security;
 
 public class JwtAuthenticationFilter {
 
