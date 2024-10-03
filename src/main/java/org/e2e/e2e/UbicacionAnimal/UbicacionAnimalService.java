@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,12 +20,14 @@ public class UbicacionAnimalService {
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
 
-    public List<UbicacionAnimal> obtenerUbicaciones(Long animalId) {
+    public List<UbicacionAnimalResponseDto> obtenerUbicaciones(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
-        return animal.getUbicaciones();
+        return animal.getUbicaciones().stream()
+                .map(this::convertirUbicacionAResponseDto)
+                .collect(Collectors.toList());
     }
 
-    public UbicacionAnimal guardarUbicacion(UbicacionAnimalRequestDto ubicacionDto) {
+    public UbicacionAnimalResponseDto guardarUbicacion(UbicacionAnimalRequestDto ubicacionDto) {
         Animal animal = animalService.obtenerAnimalPorId(ubicacionDto.getAnimalId());
 
         UbicacionAnimal ubicacion = new UbicacionAnimal();
@@ -36,7 +39,7 @@ public class UbicacionAnimalService {
         // Guardar la ubicación en la base de datos
         UbicacionAnimal ubicacionGuardada = ubicacionAnimalRepository.save(ubicacion);
 
-        // Obtener el adoptante (dueño) del animal
+        // Enviar correo electrónico al adoptante
         Usuario adoptante = animal.getAdoptante();
         String emailSubject = "Nueva ubicación registrada para " + animal.getNombre();
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
@@ -47,10 +50,9 @@ public class UbicacionAnimalService {
                 "Saludos,\n" +
                 "Equipo de Adopción y Seguimiento de Animales";
 
-        // Disparar el evento de correo electrónico
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        return ubicacionGuardada;
+        return convertirUbicacionAResponseDto(ubicacionGuardada);
     }
 
     public UbicacionAnimalResponseDto convertirUbicacionAResponseDto(UbicacionAnimal ubicacion) {

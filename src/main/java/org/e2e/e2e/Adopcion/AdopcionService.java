@@ -20,10 +20,12 @@ public class AdopcionService {
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
 
+    // Obtener todas las adopciones
     public List<Adopcion> obtenerTodasLasAdopciones() {
         return adopcionRepository.findAll();
     }
 
+    // Registrar una adopción
     public Adopcion registrarAdopcion(AdopcionRequestDto adopcionDto) {
         Usuario adoptante = usuarioService.obtenerUsuarioPorId(adopcionDto.getAdoptanteId());
         Animal animal = animalService.obtenerAnimalPorId(adopcionDto.getAnimalId());
@@ -50,14 +52,17 @@ public class AdopcionService {
         return adopcionGuardada;
     }
 
+    // Obtener una adopción por ID
     public Adopcion obtenerAdopcionPorId(Long id) {
         return adopcionRepository.findById(id).orElseThrow(() -> new RuntimeException("Adopción no encontrada"));
     }
 
+    // Eliminar una adopción por ID
     public void eliminarAdopcion(Long id) {
         adopcionRepository.deleteById(id);
     }
 
+    // Convertir una entidad Adopcion a DTO de respuesta
     public AdopcionResponseDto convertirAdopcionAResponseDto(Adopcion adopcion) {
         AdopcionResponseDto responseDto = new AdopcionResponseDto();
         responseDto.setId(adopcion.getId());

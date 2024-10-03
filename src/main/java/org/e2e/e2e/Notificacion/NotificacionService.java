@@ -16,17 +16,18 @@ public class NotificacionService {
     private final UsuarioService usuarioService;
 
     public List<Notificacion> obtenerNotificacionesPorUsuario(Long usuarioId) {
-        return usuarioService.obtenerUsuarioPorId(usuarioId).getNotificaciones();
+        Usuario usuario = usuarioService.obtenerUsuarioPorId(usuarioId);
+        return usuario.getNotificaciones();  // Suponiendo que la entidad Usuario tiene una lista de notificaciones
     }
 
-    public Notificacion guardarNotificacion(NotificacionRequestDto notificacionDto) {
+    public Notificacion enviarNotificacion(NotificacionRequestDto notificacionDto) {
         Usuario usuario = usuarioService.obtenerUsuarioPorId(notificacionDto.getUsuarioId());
 
         Notificacion notificacion = new Notificacion();
         notificacion.setMensaje(notificacionDto.getMensaje());
         notificacion.setUsuario(usuario);
         notificacion.setFechaEnvio(LocalDateTime.now());
-        notificacion.setEnviada(true);  // Asumimos que la notificación se envía inmediatamente
+        notificacion.setEnviada(true);
 
         return notificacionRepository.save(notificacion);
     }

@@ -11,4 +11,5 @@ public class AdopcionResponseDto {
     private LocalDate fechaAdopcion;
     private Long adoptanteId;  // ID del usuario adoptante
     private Long animalId;  // ID del animal adoptado
+    private EstadoAdopcion estado;  // Estado de la adopción
 }

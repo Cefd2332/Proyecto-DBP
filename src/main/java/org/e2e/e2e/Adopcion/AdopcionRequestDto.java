@@ -16,4 +16,6 @@ public class AdopcionRequestDto {
 
     @NotNull(message = "El ID del animal no puede ser nulo")
     private Long animalId;  // ID del animal que está siendo adoptado
+
+    private EstadoAdopcion estado = EstadoAdopcion.EN_PROCESO;  // Estado inicial de la adopción
 }

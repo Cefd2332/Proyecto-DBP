@@ -29,6 +29,8 @@ public class CitaVeterinariaService {
         CitaVeterinaria cita = new CitaVeterinaria();
         cita.setFechaCita(citaDto.getFechaCita());
         cita.setVeterinario(citaDto.getVeterinario());
+        // Estado por defecto si no se especifica en la solicitud
+        cita.setEstado(citaDto.getEstado() != null ? citaDto.getEstado() : EstadoCita.PENDIENTE);
         cita.setAnimal(animal);
 
         // Guardar la cita en la base de datos
@@ -60,6 +62,7 @@ public class CitaVeterinariaService {
         responseDto.setFechaCita(cita.getFechaCita());
         responseDto.setVeterinario(cita.getVeterinario());
         responseDto.setAnimalId(cita.getAnimal().getId());
+        responseDto.setEstado(cita.getEstado());  // Agregamos el estado en el DTO de respuesta
         return responseDto;
     }
 }

@@ -19,4 +19,7 @@ public class CitaVeterinariaRequestDto {
 
     @NotNull(message = "El ID del animal no puede ser nulo")
     private Long animalId;
+
+    private EstadoCita estado = EstadoCita.PENDIENTE;  // Estado por defecto al crear la cita
 }
+

@@ -1,6 +1,5 @@
 package org.e2e.e2e.Notificacion;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +16,16 @@ public class NotificacionController {
 
     @GetMapping("/{usuarioId}")
     public ResponseEntity<List<NotificacionResponseDto>> obtenerNotificacionesPorUsuario(@PathVariable Long usuarioId) {
-        List<NotificacionResponseDto> notificaciones = notificacionService.obtenerNotificacionesPorUsuario(usuarioId).stream()
+        List<NotificacionResponseDto> notificaciones = notificacionService.obtenerNotificacionesPorUsuario(usuarioId)
+                .stream()
                 .map(notificacionService::convertirNotificacionAResponseDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(notificaciones);
     }
 
     @PostMapping
-    public ResponseEntity<NotificacionResponseDto> enviarNotificacion(@Valid @RequestBody NotificacionRequestDto notificacionDto) {
-        Notificacion notificacion = notificacionService.guardarNotificacion(notificacionDto);
+    public ResponseEntity<NotificacionResponseDto> enviarNotificacion(@RequestBody NotificacionRequestDto notificacionDto) {
+        Notificacion notificacion = notificacionService.enviarNotificacion(notificacionDto);
         return ResponseEntity.ok(notificacionService.convertirNotificacionAResponseDto(notificacion));
     }
 }

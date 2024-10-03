@@ -21,5 +21,8 @@ public class AnimalRequestDto {
     private String estadoSalud;
 
     @NotNull(message = "El adoptante no puede ser nulo")
-    private Long adoptanteId; // Asociado al usuario que adopta al animal
+    private Long adoptanteId;
+
+    // Nuevo campo para controlar el estado actual del animal
+    private EstadoAnimal estado;  // Este campo es opcional, puede omitirse si no es necesario
 }

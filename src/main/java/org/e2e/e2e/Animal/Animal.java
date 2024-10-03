@@ -25,9 +25,15 @@ public class Animal {
     private String estadoSalud;
     private LocalDate fechaAdopcion;
 
+    @Enumerated(EnumType.STRING)
+    private EstadoAnimal estadoActual;  // Estado actual del animal
+
     @ManyToOne
-    @JoinColumn(name = "adoptante_id")  // Relaciona el animal con su adoptante
+    @JoinColumn(name = "adoptante_id")
     private Usuario adoptante;
+
+    @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RegistroEstadoAnimal> historialEstados = new ArrayList<>();
 
     @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RegistroSalud> historialMedico = new ArrayList<>();
@@ -40,6 +46,4 @@ public class Animal {
 
     @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vacuna> vacunas = new ArrayList<>();
-
-    // Métodos adicionales, si es necesario, serán generados por Lombok (@Data)
 }

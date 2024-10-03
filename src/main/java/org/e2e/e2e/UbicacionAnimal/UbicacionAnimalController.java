@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/ubicaciones")
@@ -17,15 +16,13 @@ public class UbicacionAnimalController {
 
     @GetMapping("/{animalId}")
     public ResponseEntity<List<UbicacionAnimalResponseDto>> obtenerUbicaciones(@PathVariable Long animalId) {
-        List<UbicacionAnimalResponseDto> ubicaciones = ubicacionAnimalService.obtenerUbicaciones(animalId).stream()
-                .map(ubicacionAnimalService::convertirUbicacionAResponseDto)
-                .collect(Collectors.toList());
+        List<UbicacionAnimalResponseDto> ubicaciones = ubicacionAnimalService.obtenerUbicaciones(animalId);
         return ResponseEntity.ok(ubicaciones);
     }
 
     @PostMapping
     public ResponseEntity<UbicacionAnimalResponseDto> registrarUbicacion(@Valid @RequestBody UbicacionAnimalRequestDto ubicacionDto) {
-        UbicacionAnimal ubicacion = ubicacionAnimalService.guardarUbicacion(ubicacionDto);
-        return ResponseEntity.ok(ubicacionAnimalService.convertirUbicacionAResponseDto(ubicacion));
+        UbicacionAnimalResponseDto responseDto = ubicacionAnimalService.guardarUbicacion(ubicacionDto);
+        return ResponseEntity.ok(responseDto);
     }
 }

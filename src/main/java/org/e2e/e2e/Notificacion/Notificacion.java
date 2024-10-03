@@ -14,8 +14,10 @@ public class Notificacion {
     private Long id;
 
     private String mensaje;
-    private LocalDateTime fechaEnvio;
-    private boolean enviada;  // Para marcar si ya se envió la notificación
+
+    private LocalDateTime fechaEnvio = LocalDateTime.now(); // Fecha de envío se establece automáticamente al crear
+
+    private boolean enviada = false;  // Inicialmente no enviada
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")  // Relaciona la notificación con el usuario adoptante

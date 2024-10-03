@@ -23,4 +23,7 @@ public class Adopcion {
     @OneToOne
     @JoinColumn(name = "animal_id")  // Relaciona la adopción con el animal
     private Animal animal;
+
+    @Enumerated(EnumType.STRING)  // Enumera el estado de la adopción
+    private EstadoAdopcion estado;  // Estado de la adopción
 }

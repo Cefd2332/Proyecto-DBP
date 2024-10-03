@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -14,13 +15,15 @@ public class RegistroSaludController {
     private final RegistroSaludService registroSaludService;
 
     @GetMapping("/{animalId}")
-    public ResponseEntity<List<RegistroSalud>> obtenerHistorialMedico(@PathVariable Long animalId) {
-        return ResponseEntity.ok(registroSaludService.obtenerHistorialMedico(animalId));
+    public ResponseEntity<List<RegistroSaludResponseDto>> obtenerHistorialMedico(@PathVariable Long animalId) {
+        List<RegistroSaludResponseDto> historial = registroSaludService.obtenerHistorialMedico(animalId);
+        return ResponseEntity.ok(historial);
     }
 
     @PostMapping
-    public ResponseEntity<RegistroSalud> registrarConsulta(@RequestBody RegistroSalud registroSalud) {
-        return ResponseEntity.ok(registroSaludService.guardarRegistroSalud(registroSalud));
+    public ResponseEntity<RegistroSaludResponseDto> registrarConsulta(@Valid @RequestBody RegistroSaludRequestDto registroSaludDto) {
+        RegistroSaludResponseDto responseDto = registroSaludService.guardarRegistroSalud(registroSaludDto);
+        return ResponseEntity.ok(responseDto);
     }
 
     @DeleteMapping("/{id}")

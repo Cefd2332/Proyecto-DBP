@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,12 +19,14 @@ public class RegistroSaludService {
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
 
-    public List<RegistroSalud> obtenerHistorialMedico(Long animalId) {
+    public List<RegistroSaludResponseDto> obtenerHistorialMedico(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
-        return animal.getHistorialMedico();
+        return animal.getHistorialMedico().stream()
+                .map(this::convertirRegistroSaludAResponseDto)
+                .collect(Collectors.toList());
     }
 
-    public RegistroSalud guardarRegistroSalud(RegistroSaludRequestDto registroSaludDto) {
+    public RegistroSaludResponseDto guardarRegistroSalud(RegistroSaludRequestDto registroSaludDto) {
         Animal animal = animalService.obtenerAnimalPorId(registroSaludDto.getAnimalId());
 
         RegistroSalud registroSalud = new RegistroSalud();
@@ -35,7 +38,7 @@ public class RegistroSaludService {
         // Guardar el registro de salud en la base de datos
         RegistroSalud registroGuardado = registroSaludRepository.save(registroSalud);
 
-        // Obtener el adoptante (dueño) del animal
+        // Enviar notificación por correo electrónico
         Usuario adoptante = animal.getAdoptante();
         String emailSubject = "Nuevo registro de salud para " + animal.getNombre();
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
@@ -46,13 +49,22 @@ public class RegistroSaludService {
                 "Saludos,\n" +
                 "Equipo de Adopción y Seguimiento de Animales";
 
-        // Disparar el evento de correo electrónico
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        return registroGuardado;
+        return convertirRegistroSaludAResponseDto(registroGuardado);
     }
 
     public void eliminarRegistroSalud(Long id) {
         registroSaludRepository.deleteById(id);
+    }
+
+    public RegistroSaludResponseDto convertirRegistroSaludAResponseDto(RegistroSalud registroSalud) {
+        RegistroSaludResponseDto responseDto = new RegistroSaludResponseDto();
+        responseDto.setId(registroSalud.getId());
+        responseDto.setDescripcion(registroSalud.getDescripcion());
+        responseDto.setFechaConsulta(registroSalud.getFechaConsulta());
+        responseDto.setVeterinario(registroSalud.getVeterinario());
+        responseDto.setAnimalId(registroSalud.getAnimal().getId());
+        return responseDto;
     }
 }

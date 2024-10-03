@@ -10,5 +10,6 @@ public class AnimalResponseDto {
     private String especie;
     private int edad;
     private String estadoSalud;
-    private Long adoptanteId; // ID del adoptante
+    private Long adoptanteId;
+    private EstadoAnimal estadoActual;  // Estado actual del animal
 }
