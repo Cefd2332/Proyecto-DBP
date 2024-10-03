@@ -19,6 +19,9 @@ public class Usuario {
     private String email;
     private String direccion;
 
+    // Campo para almacenar el token FCM para notificaciones push
+    private String token;
+
     @OneToMany(mappedBy = "adoptante", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Animal> animalesAdoptados = new ArrayList<>();
 

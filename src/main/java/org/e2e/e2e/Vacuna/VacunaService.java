@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
+import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class VacunaService {
     private final VacunaRepository vacunaRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificacionPushService notificacionPushService; // Inyectamos el servicio de notificaciones push
 
     public List<Vacuna> obtenerVacunasPorAnimal(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
@@ -46,6 +48,14 @@ public class VacunaService {
 
         // Disparar el evento de correo electrónico
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
+
+        // Enviar notificación push al adoptante
+        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
+            String pushTitle = "Nueva vacuna registrada para " + animal.getNombre();
+            String pushBody = "Se ha registrado una nueva vacuna: " + vacuna.getNombre() +
+                    " para tu mascota " + animal.getNombre() + ". Fecha: " + vacuna.getFechaAplicacion();
+            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
+        }
 
         return vacunaGuardada;
     }

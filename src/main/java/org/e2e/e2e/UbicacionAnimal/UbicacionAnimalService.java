@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
+import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class UbicacionAnimalService {
     private final UbicacionAnimalRepository ubicacionAnimalRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificacionPushService notificacionPushService;  // Inyectamos el servicio de notificaciones push
 
     public List<UbicacionAnimalResponseDto> obtenerUbicaciones(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
@@ -51,6 +53,15 @@ public class UbicacionAnimalService {
                 "Equipo de Adopción y Seguimiento de Animales";
 
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
+
+        // Enviar notificación push al adoptante si tiene un token FCM válido
+        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
+            String pushTitle = "Nueva ubicación para " + animal.getNombre();
+            String pushBody = "Se ha registrado una nueva ubicación para tu mascota " + animal.getNombre() +
+                    ". Latitud: " + ubicacion.getLatitud() + ", Longitud: " + ubicacion.getLongitud() +
+                    ". Fecha: " + ubicacion.getFechaHora();
+            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
+        }
 
         return convertirUbicacionAResponseDto(ubicacionGuardada);
     }
