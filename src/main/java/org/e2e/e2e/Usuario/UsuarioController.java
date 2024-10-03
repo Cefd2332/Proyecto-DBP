@@ -1,5 +1,6 @@
 package org.e2e.e2e.Usuario;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,15 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> registrarUsuario(@RequestBody Usuario usuario) {
-        return ResponseEntity.ok(usuarioService.guardarUsuario(usuario));
+    public ResponseEntity<Usuario> registrarUsuario(@Valid @RequestBody UsuarioRequestDto usuarioDto) {
+        Usuario usuario = usuarioService.guardarUsuario(usuarioDto);
+        return ResponseEntity.ok(usuario);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuarioActualizado) {
-        return ResponseEntity.ok(usuarioService.actualizarUsuario(id, usuarioActualizado));
+    public ResponseEntity<Usuario> actualizarUsuario(@PathVariable Long id, @Valid @RequestBody UsuarioRequestDto usuarioDto) {
+        Usuario usuarioActualizado = usuarioService.actualizarUsuario(id, usuarioDto);
+        return ResponseEntity.ok(usuarioActualizado);
     }
 
     @DeleteMapping("/{id}")

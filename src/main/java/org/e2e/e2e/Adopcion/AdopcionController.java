@@ -1,10 +1,12 @@
 package org.e2e.e2e.Adopcion;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/adopciones")
@@ -14,18 +16,23 @@ public class AdopcionController {
     private final AdopcionService adopcionService;
 
     @GetMapping
-    public ResponseEntity<List<Adopcion>> obtenerAdopciones() {
-        return ResponseEntity.ok(adopcionService.obtenerTodasLasAdopciones());
+    public ResponseEntity<List<AdopcionResponseDto>> obtenerAdopciones() {
+        List<AdopcionResponseDto> adopciones = adopcionService.obtenerTodasLasAdopciones().stream()
+                .map(adopcionService::convertirAdopcionAResponseDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(adopciones);
     }
 
     @PostMapping
-    public ResponseEntity<Adopcion> registrarAdopcion(@RequestBody Adopcion adopcion) {
-        return ResponseEntity.ok(adopcionService.registrarAdopcion(adopcion));
+    public ResponseEntity<AdopcionResponseDto> registrarAdopcion(@Valid @RequestBody AdopcionRequestDto adopcionDto) {
+        Adopcion adopcion = adopcionService.registrarAdopcion(adopcionDto);
+        return ResponseEntity.ok(adopcionService.convertirAdopcionAResponseDto(adopcion));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Adopcion> obtenerAdopcionPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(adopcionService.obtenerAdopcionPorId(id));
+    public ResponseEntity<AdopcionResponseDto> obtenerAdopcionPorId(@PathVariable Long id) {
+        Adopcion adopcion = adopcionService.obtenerAdopcionPorId(id);
+        return ResponseEntity.ok(adopcionService.convertirAdopcionAResponseDto(adopcion));
     }
 
     @DeleteMapping("/{id}")
