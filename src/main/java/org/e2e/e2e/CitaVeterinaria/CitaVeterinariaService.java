@@ -6,6 +6,7 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -53,8 +54,9 @@ public class CitaVeterinariaService {
 
         // Enviar notificación push al adoptante
         if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-            String pushTitle = "Recordatorio de cita para " + animal.getNombre();
-            String pushBody = "Tiene una cita con el veterinario " + cita.getVeterinario() + " el " + cita.getFechaCita();
+            String pushTitle = "Nueva cita para " + animal.getNombre();
+            String pushBody = "Se ha registrado una nueva cita con el veterinario " + cita.getVeterinario() +
+                    " para tu mascota " + animal.getNombre() + ". Fecha: " + cita.getFechaCita();
             notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
         }
 
@@ -62,6 +64,9 @@ public class CitaVeterinariaService {
     }
 
     public void eliminarCita(Long id) {
+        if (!citaVeterinariaRepository.existsById(id)) {
+            throw new NotFoundException("Cita veterinaria no encontrada");
+        }
         citaVeterinariaRepository.deleteById(id);
     }
 

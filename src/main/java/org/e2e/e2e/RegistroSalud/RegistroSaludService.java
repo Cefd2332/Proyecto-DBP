@@ -6,6 +6,7 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
+import org.e2e.e2e.exceptions.NotFoundException;  // Importar la excepción de no encontrado
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ public class RegistroSaludService {
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;  // Inyectamos el servicio de notificaciones push
 
+    // Obtener historial médico de un animal
     public List<RegistroSaludResponseDto> obtenerHistorialMedico(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
         return animal.getHistorialMedico().stream()
@@ -28,6 +30,7 @@ public class RegistroSaludService {
                 .collect(Collectors.toList());
     }
 
+    // Guardar un nuevo registro de salud
     public RegistroSaludResponseDto guardarRegistroSalud(RegistroSaludRequestDto registroSaludDto) {
         Animal animal = animalService.obtenerAnimalPorId(registroSaludDto.getAnimalId());
 
@@ -67,10 +70,16 @@ public class RegistroSaludService {
         return convertirRegistroSaludAResponseDto(registroGuardado);
     }
 
+    // Eliminar un registro de salud
     public void eliminarRegistroSalud(Long id) {
+        // Verificar si el registro de salud existe antes de eliminar
+        if (!registroSaludRepository.existsById(id)) {
+            throw new NotFoundException("Registro de salud no encontrado con ID: " + id);
+        }
         registroSaludRepository.deleteById(id);
     }
 
+    // Convertir un registro de salud a DTO de respuesta
     public RegistroSaludResponseDto convertirRegistroSaludAResponseDto(RegistroSalud registroSalud) {
         RegistroSaludResponseDto responseDto = new RegistroSaludResponseDto();
         responseDto.setId(registroSalud.getId());

@@ -5,6 +5,7 @@ import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Usuario.UsuarioRepository;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Email.EmailEvent;
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,7 @@ public class AnimalService {
     // Guardar un nuevo animal
     public Animal guardarAnimal(AnimalRequestDto animalDto) {
         Usuario adoptante = usuarioRepository.findById(animalDto.getAdoptanteId())
-                .orElseThrow(() -> new RuntimeException("Adoptante no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Adoptante no encontrado"));
 
         Animal animal = new Animal();
         animal.setNombre(animalDto.getNombre());
@@ -44,7 +45,7 @@ public class AnimalService {
     // Obtener un animal por ID
     public Animal obtenerAnimalPorId(Long id) {
         return animalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Animal no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Animal no encontrado"));
     }
 
     // Actualizar la información del animal
@@ -56,7 +57,7 @@ public class AnimalService {
         animal.setEstadoSalud(animalDto.getEstadoSalud());
 
         Usuario adoptante = usuarioRepository.findById(animalDto.getAdoptanteId())
-                .orElseThrow(() -> new RuntimeException("Adoptante no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Adoptante no encontrado"));
         animal.setAdoptante(adoptante);
 
         // Actualizar el estado del animal si se proporciona en el DTO
@@ -69,6 +70,9 @@ public class AnimalService {
 
     // Eliminar un animal
     public void eliminarAnimal(Long id) {
+        if (!animalRepository.existsById(id)) {
+            throw new NotFoundException("Animal no encontrado");
+        }
         animalRepository.deleteById(id);
     }
 

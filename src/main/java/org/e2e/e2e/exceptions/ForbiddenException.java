@@ -1,0 +1,7 @@
+package org.e2e.e2e.exceptions;
+
+public class ForbiddenException extends RuntimeException {
+    public ForbiddenException(String message) {
+        super(message);
+    }
+}

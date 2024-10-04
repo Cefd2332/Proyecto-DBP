@@ -3,6 +3,7 @@ package org.e2e.e2e.Notificacion;
 import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Usuario.UsuarioService;
+import org.e2e.e2e.exceptions.NotFoundException;  // Importar la excepción de no encontrado
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

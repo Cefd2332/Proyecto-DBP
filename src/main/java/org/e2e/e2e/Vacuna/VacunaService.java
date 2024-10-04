@@ -6,6 +6,7 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
+import org.e2e.e2e.exceptions.NotFoundException;  // Importa la excepción personalizada
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,13 @@ public class VacunaService {
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService; // Inyectamos el servicio de notificaciones push
 
+    // Obtener vacunas por animal
     public List<Vacuna> obtenerVacunasPorAnimal(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
         return animal.getVacunas();
     }
 
+    // Guardar una nueva vacuna
     public Vacuna guardarVacuna(VacunaRequestDto vacunaDto) {
         Animal animal = animalService.obtenerAnimalPorId(vacunaDto.getAnimalId());
 
@@ -62,10 +65,15 @@ public class VacunaService {
         return vacunaGuardada;
     }
 
+    // Eliminar una vacuna
     public void eliminarVacuna(Long id) {
+        if (!vacunaRepository.existsById(id)) {
+            throw new NotFoundException("Vacuna no encontrada con ID: " + id);
+        }
         vacunaRepository.deleteById(id);
     }
 
+    // Convertir vacuna a DTO de respuesta
     public VacunaResponseDto convertirVacunaAResponseDto(Vacuna vacuna) {
         VacunaResponseDto responseDto = new VacunaResponseDto();
         responseDto.setId(vacuna.getId());

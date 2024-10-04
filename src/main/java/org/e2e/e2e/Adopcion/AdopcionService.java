@@ -7,6 +7,8 @@ import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Usuario.UsuarioService;
+import org.e2e.e2e.exceptions.ConflictException;
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,11 @@ public class AdopcionService {
     public Adopcion registrarAdopcion(AdopcionRequestDto adopcionDto) {
         Usuario adoptante = usuarioService.obtenerUsuarioPorId(adopcionDto.getAdoptanteId());
         Animal animal = animalService.obtenerAnimalPorId(adopcionDto.getAnimalId());
+
+        // Verificar si ya existe una adopción para este animal
+        if (adopcionRepository.existsByAnimalId(animal.getId())) {
+            throw new ConflictException("Este animal ya ha sido adoptado.");
+        }
 
         Adopcion adopcion = new Adopcion();
         adopcion.setFechaAdopcion(adopcionDto.getFechaAdopcion());
@@ -63,11 +70,14 @@ public class AdopcionService {
 
     // Obtener una adopción por ID
     public Adopcion obtenerAdopcionPorId(Long id) {
-        return adopcionRepository.findById(id).orElseThrow(() -> new RuntimeException("Adopción no encontrada"));
+        return adopcionRepository.findById(id).orElseThrow(() -> new NotFoundException("Adopción no encontrada"));
     }
 
     // Eliminar una adopción por ID
     public void eliminarAdopcion(Long id) {
+        if (!adopcionRepository.existsById(id)) {
+            throw new NotFoundException("Adopción no encontrada");
+        }
         adopcionRepository.deleteById(id);
     }
 

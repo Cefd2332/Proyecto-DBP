@@ -6,6 +6,7 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
+import org.e2e.e2e.exceptions.NotFoundException;  // Importar la excepción de no encontrado
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class UbicacionAnimalService {
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;  // Inyección de servicio de notificaciones push
 
+    // Obtener ubicaciones por animal
     public List<UbicacionAnimalResponseDto> obtenerUbicaciones(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
         return animal.getUbicaciones().stream()
@@ -29,6 +31,7 @@ public class UbicacionAnimalService {
                 .collect(Collectors.toList());
     }
 
+    // Guardar una nueva ubicación
     public UbicacionAnimalResponseDto guardarUbicacion(UbicacionAnimalRequestDto ubicacionDto) {
         Animal animal = animalService.obtenerAnimalPorId(ubicacionDto.getAnimalId());
 
@@ -66,6 +69,7 @@ public class UbicacionAnimalService {
         return convertirUbicacionAResponseDto(ubicacionGuardada);
     }
 
+    // Convertir una entidad UbicacionAnimal a DTO de respuesta
     public UbicacionAnimalResponseDto convertirUbicacionAResponseDto(UbicacionAnimal ubicacion) {
         UbicacionAnimalResponseDto responseDto = new UbicacionAnimalResponseDto();
         responseDto.setId(ubicacion.getId());
@@ -74,5 +78,14 @@ public class UbicacionAnimalService {
         responseDto.setFechaHora(ubicacion.getFechaHora());
         responseDto.setAnimalId(ubicacion.getAnimal().getId());
         return responseDto;
+    }
+
+    // Eliminar una ubicación por ID
+    public void eliminarUbicacion(Long id) {
+        // Verificar si la ubicación existe antes de eliminar
+        if (!ubicacionAnimalRepository.existsById(id)) {
+            throw new NotFoundException("Ubicación no encontrada con ID: " + id);
+        }
+        ubicacionAnimalRepository.deleteById(id);
     }
 }
