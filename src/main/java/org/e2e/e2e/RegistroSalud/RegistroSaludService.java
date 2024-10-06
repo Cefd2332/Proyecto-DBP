@@ -6,8 +6,9 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
-import org.e2e.e2e.exceptions.NotFoundException;  // Importar la excepción de no encontrado
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class RegistroSaludService {
     private final RegistroSaludRepository registroSaludRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
-    private final NotificacionPushService notificacionPushService;  // Inyectamos el servicio de notificaciones push
+    private final NotificacionPushService notificacionPushService;
 
     // Obtener historial médico de un animal
     public List<RegistroSaludResponseDto> obtenerHistorialMedico(Long animalId) {
@@ -43,13 +44,36 @@ public class RegistroSaludService {
         // Guardar el registro de salud en la base de datos
         RegistroSalud registroGuardado = registroSaludRepository.save(registroSalud);
 
-        // Obtener el adoptante del animal
+        // Enviar correos y notificaciones de forma asíncrona
+        enviarNotificacionesAsync(animal, registroSalud, "Nuevo registro de salud para " + animal.getNombre());
+
+        return convertirRegistroSaludAResponseDto(registroGuardado);
+    }
+
+    // Eliminar un registro de salud
+    public void eliminarRegistroSalud(Long id) {
+        RegistroSalud registroSalud = registroSaludRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Registro de salud no encontrado con ID: " + id));
+
+        // Obtener el animal asociado al registro de salud
+        Animal animal = registroSalud.getAnimal();
+
+        // Eliminar el registro de salud
+        registroSaludRepository.deleteById(id);
+
+        // Enviar correo sobre la eliminación del registro de salud de forma asíncrona
+        enviarNotificacionesAsync(animal, registroSalud, "Registro de salud eliminado para " + animal.getNombre());
+    }
+
+    // Método auxiliar para enviar notificaciones (correo y push) de manera asíncrona
+    @Async
+    public void enviarNotificacionesAsync(Animal animal, RegistroSalud registroSalud, String subject) {
         Usuario adoptante = animal.getAdoptante();
 
-        // Enviar notificación por correo electrónico
-        String emailSubject = "Nuevo registro de salud para " + animal.getNombre();
+        // Enviar correo electrónico
+        String emailSubject = subject;
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
-                "Se ha registrado una nueva consulta de salud para su mascota " + animal.getNombre() + ".\n" +
+                "Se ha realizado la siguiente acción en la salud de su mascota " + animal.getNombre() + ":\n" +
                 "Veterinario: " + registroSalud.getVeterinario() + "\n" +
                 "Fecha de consulta: " + registroSalud.getFechaConsulta() + "\n" +
                 "Descripción: " + registroSalud.getDescripcion() + "\n\n" +
@@ -60,23 +84,12 @@ public class RegistroSaludService {
 
         // Enviar notificación push al adoptante si tiene un token válido
         if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-            String pushTitle = "Nuevo registro de salud para " + animal.getNombre();
-            String pushBody = "Se ha registrado una nueva consulta de salud para tu mascota " + animal.getNombre() +
+            String pushTitle = subject;
+            String pushBody = "Se ha realizado una acción en la salud de tu mascota " + animal.getNombre() +
                     ". Veterinario: " + registroSalud.getVeterinario() +
                     ". Fecha de consulta: " + registroSalud.getFechaConsulta();
             notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
         }
-
-        return convertirRegistroSaludAResponseDto(registroGuardado);
-    }
-
-    // Eliminar un registro de salud
-    public void eliminarRegistroSalud(Long id) {
-        // Verificar si el registro de salud existe antes de eliminar
-        if (!registroSaludRepository.existsById(id)) {
-            throw new NotFoundException("Registro de salud no encontrado con ID: " + id);
-        }
-        registroSaludRepository.deleteById(id);
     }
 
     // Convertir un registro de salud a DTO de respuesta

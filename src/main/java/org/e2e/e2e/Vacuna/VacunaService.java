@@ -6,7 +6,7 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
-import org.e2e.e2e.exceptions.NotFoundException;  // Importa la excepción personalizada
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class VacunaService {
     private final VacunaRepository vacunaRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
-    private final NotificacionPushService notificacionPushService; // Inyectamos el servicio de notificaciones push
+    private final NotificacionPushService notificacionPushService;
 
     // Obtener vacunas por animal
     public List<Vacuna> obtenerVacunasPorAnimal(Long animalId) {
@@ -41,46 +41,25 @@ public class VacunaService {
         // Guardar la vacuna en la base de datos
         Vacuna vacunaGuardada = vacunaRepository.save(vacuna);
 
-        // Obtener el adoptante (dueño) del animal
-        Usuario adoptante = animal.getAdoptante();
-        String emailSubject = "Nueva vacuna registrada para " + animal.getNombre();
-        String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
-                "Se ha registrado una nueva vacuna para su mascota " + animal.getNombre() + ".\n" +
-                "Nombre de la vacuna: " + vacuna.getNombre() + "\n" +
-                "Fecha de aplicación: " + vacuna.getFechaAplicacion() + "\n\n" +
-                "Saludos,\n" +
-                "Equipo de Adopción y Seguimiento de Animales";
-
-        // Disparar el evento de correo electrónico
-        eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
-
-        // Enviar notificación push al adoptante
-        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-            String pushTitle = "Nueva vacuna registrada para " + animal.getNombre();
-            String pushBody = "Se ha registrado una nueva vacuna: " + vacuna.getNombre() +
-                    " para tu mascota " + animal.getNombre() + ". Fecha: " + vacuna.getFechaAplicacion();
-            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
-        }
+        // Enviar correos y notificaciones
+        enviarNotificaciones(animal, vacuna, "Nueva vacuna registrada para " + animal.getNombre());
 
         return vacunaGuardada;
     }
 
     // Eliminar una vacuna
     public void eliminarVacuna(Long id) {
-        if (!vacunaRepository.existsById(id)) {
-            throw new NotFoundException("Vacuna no encontrada con ID: " + id);
-        }
-        vacunaRepository.deleteById(id);
-    }
+        Vacuna vacuna = vacunaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Vacuna no encontrada con ID: " + id));
 
-    // Convertir vacuna a DTO de respuesta
-    public VacunaResponseDto convertirVacunaAResponseDto(Vacuna vacuna) {
-        VacunaResponseDto responseDto = new VacunaResponseDto();
-        responseDto.setId(vacuna.getId());
-        responseDto.setNombre(vacuna.getNombre());
-        responseDto.setFechaAplicacion(vacuna.getFechaAplicacion());
-        responseDto.setAnimalId(vacuna.getAnimal().getId());
-        return responseDto;
+        // Obtener el animal relacionado
+        Animal animal = vacuna.getAnimal();
+
+        // Eliminar la vacuna
+        vacunaRepository.deleteById(id);
+
+        // Enviar correos y notificaciones
+        enviarNotificaciones(animal, vacuna, "Vacuna eliminada para " + animal.getNombre());
     }
 
     // Método programado para enviar recordatorios de vacunas
@@ -93,22 +72,42 @@ public class VacunaService {
         List<Vacuna> vacunasProximas = vacunaRepository.findVacunasProximas(today, nextWeek);
 
         for (Vacuna vacuna : vacunasProximas) {
-            Usuario adoptante = vacuna.getAnimal().getAdoptante();
-            String emailSubject = "Recordatorio: Vacuna próxima para " + vacuna.getAnimal().getNombre();
-            String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
-                    "Recuerde que la vacuna " + vacuna.getNombre() + " de su mascota " + vacuna.getAnimal().getNombre() +
-                    " está programada para el " + vacuna.getFechaAplicacion() + ".\n\nSaludos,\n" +
-                    "Equipo de Adopción y Seguimiento de Animales";
-
-            // Enviar correo electrónico
-            eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
-
-            // Enviar notificación push
-            if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-                String pushTitle = "Recordatorio de vacuna para " + vacuna.getAnimal().getNombre();
-                String pushBody = "La vacuna " + vacuna.getNombre() + " está programada para " + vacuna.getFechaAplicacion();
-                notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
-            }
+            Animal animal = vacuna.getAnimal();
+            enviarNotificaciones(animal, vacuna, "Recordatorio: Vacuna próxima para " + animal.getNombre());
         }
+    }
+
+    // Método auxiliar para enviar correos y notificaciones push
+    private void enviarNotificaciones(Animal animal, Vacuna vacuna, String subject) {
+        Usuario adoptante = animal.getAdoptante();
+
+        // Enviar correo electrónico
+        String emailSubject = subject;
+        String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
+                "Se ha realizado la siguiente acción en la vacunación de su mascota " + animal.getNombre() + ":\n" +
+                "Nombre de la vacuna: " + vacuna.getNombre() + "\n" +
+                "Fecha de aplicación: " + vacuna.getFechaAplicacion() + "\n\n" +
+                "Saludos,\n" +
+                "Equipo de Adopción y Seguimiento de Animales";
+
+        eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
+
+        // Enviar notificación push al adoptante si tiene un token válido
+        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
+            String pushTitle = subject;
+            String pushBody = "Se ha registrado una acción relacionada con la vacuna de tu mascota " + animal.getNombre() +
+                    ". Vacuna: " + vacuna.getNombre() + ". Fecha de aplicación: " + vacuna.getFechaAplicacion();
+            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
+        }
+    }
+
+    // Convertir vacuna a DTO de respuesta
+    public VacunaResponseDto convertirVacunaAResponseDto(Vacuna vacuna) {
+        VacunaResponseDto responseDto = new VacunaResponseDto();
+        responseDto.setId(vacuna.getId());
+        responseDto.setNombre(vacuna.getNombre());
+        responseDto.setFechaAplicacion(vacuna.getFechaAplicacion());
+        responseDto.setAnimalId(vacuna.getAnimal().getId());
+        return responseDto;
     }
 }

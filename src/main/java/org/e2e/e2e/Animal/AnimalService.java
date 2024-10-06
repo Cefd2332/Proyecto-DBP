@@ -40,7 +40,12 @@ public class AnimalService {
         animal.setEstadoActual(EstadoAnimal.SANO);  // Estado inicial del animal
         animal.setAdoptante(adoptante);
 
-        return animalRepository.save(animal);
+        Animal animalGuardado = animalRepository.save(animal);
+
+        // Enviar notificaciones de creación
+        enviarNotificaciones(animalGuardado, "Nuevo animal registrado: " + animalGuardado.getNombre());
+
+        return animalGuardado;
     }
 
     // Obtener un animal por ID
@@ -67,15 +72,23 @@ public class AnimalService {
             actualizarEstadoAnimal(animal, animalDto.getEstado());
         }
 
-        return animalRepository.save(animal);
+        Animal animalActualizado = animalRepository.save(animal);
+
+        // Enviar notificaciones de actualización
+        enviarNotificaciones(animalActualizado, "Información del animal actualizada: " + animalActualizado.getNombre());
+
+        return animalActualizado;
     }
 
     // Eliminar un animal
     public void eliminarAnimal(Long id) {
-        if (!animalRepository.existsById(id)) {
-            throw new NotFoundException("Animal no encontrado");
-        }
+        Animal animal = animalRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Animal no encontrado"));
+
         animalRepository.deleteById(id);
+
+        // Enviar notificación de eliminación
+        enviarNotificaciones(animal, "Animal eliminado: " + animal.getNombre());
     }
 
     // Actualizar el estado del animal y registrar el cambio en el historial
@@ -96,20 +109,8 @@ public class AnimalService {
 
         registroEstadoAnimalRepository.save(registroEstado);
 
-        // Enviar notificación push al adoptante si hay token disponible
-        String mensajeNotificacion = "El estado de salud de tu mascota " + animal.getNombre() + " ha cambiado a: " + nuevoEstado;
-        if (animal.getAdoptante().getToken() != null) {
-            notificacionPushService.enviarNotificacion(animal.getAdoptante().getToken(), "Cambio de estado de salud", mensajeNotificacion);
-        } else {
-            // Enviar notificación por correo electrónico si no hay token
-            String emailSubject = "Cambio de estado de salud para " + animal.getNombre();
-            String emailBody = "Estimado " + animal.getAdoptante().getNombre() + ",\n\n" +
-                    "El estado de salud de tu mascota ha cambiado a: " + nuevoEstado + ".\n\n" +
-                    "Saludos,\n" +
-                    "Equipo de Adopción y Seguimiento de Animales";
-
-            eventPublisher.publishEvent(new EmailEvent(animal.getAdoptante().getEmail(), emailSubject, emailBody));
-        }
+        // Enviar notificación de cambio de estado
+        enviarNotificaciones(animal, "Cambio de estado de salud para " + animal.getNombre());
 
         return animalRepository.save(animal);
     }
@@ -144,4 +145,30 @@ public class AnimalService {
         responseDto.setAnimalId(registroEstado.getAnimal().getId());
         return responseDto;
     }
+
+    // Método auxiliar para enviar correos y notificaciones
+    private void enviarNotificaciones(Animal animal, String subject) {
+        Usuario adoptante = animal.getAdoptante();
+
+        // Enviar correo electrónico
+        String emailSubject = subject;
+        String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
+                "Detalles del animal " + animal.getNombre() + ":\n" +
+                "Especie: " + animal.getEspecie() + "\n" +
+                "Edad: " + animal.getEdad() + "\n" +
+                "Estado de salud: " + animal.getEstadoSalud() + "\n" +
+                "Estado actual: " + animal.getEstadoActual() + "\n\n" +
+                "Saludos,\n" +
+                "Equipo de Adopción y Seguimiento de Animales";
+
+        eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
+
+        // Enviar notificación push si hay token disponible
+        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
+            String pushTitle = subject;
+            String pushBody = "Estado actual de tu mascota " + animal.getNombre() + ": " + animal.getEstadoActual();
+            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
+        }
+    }
 }
+

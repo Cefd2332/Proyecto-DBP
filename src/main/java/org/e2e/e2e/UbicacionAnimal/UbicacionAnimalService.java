@@ -6,8 +6,9 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
-import org.e2e.e2e.exceptions.NotFoundException;  // Importar la excepción de no encontrado
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ public class UbicacionAnimalService {
     private final UbicacionAnimalRepository ubicacionAnimalRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
-    private final NotificacionPushService notificacionPushService;  // Inyección de servicio de notificaciones push
+    private final NotificacionPushService notificacionPushService;
 
     // Obtener ubicaciones por animal
     public List<UbicacionAnimalResponseDto> obtenerUbicaciones(Long animalId) {
@@ -44,9 +45,19 @@ public class UbicacionAnimalService {
         // Guardar la ubicación en la base de datos
         UbicacionAnimal ubicacionGuardada = ubicacionAnimalRepository.save(ubicacion);
 
-        // Enviar correo electrónico al adoptante
+        // Enviar notificaciones de forma asíncrona
+        enviarNotificacionesAsync(animal, ubicacion, "Nueva ubicación registrada para " + animal.getNombre());
+
+        return convertirUbicacionAResponseDto(ubicacionGuardada);
+    }
+
+    // Método asíncrono para enviar correos y notificaciones
+    @Async
+    public void enviarNotificacionesAsync(Animal animal, UbicacionAnimal ubicacion, String subject) {
         Usuario adoptante = animal.getAdoptante();
-        String emailSubject = "Nueva ubicación registrada para " + animal.getNombre();
+
+        // Enviar correo electrónico
+        String emailSubject = subject;
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
                 "Se ha registrado una nueva ubicación para su mascota " + animal.getNombre() + ".\n" +
                 "Latitud: " + ubicacion.getLatitud() + "\n" +
@@ -57,16 +68,14 @@ public class UbicacionAnimalService {
 
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        // Enviar notificación push al adoptante si tiene un token FCM válido
+        // Enviar notificación push al adoptante si tiene un token válido
         if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-            String pushTitle = "Nueva ubicación para " + animal.getNombre();
+            String pushTitle = subject;
             String pushBody = "Se ha registrado una nueva ubicación para tu mascota " + animal.getNombre() +
                     ". Latitud: " + ubicacion.getLatitud() + ", Longitud: " + ubicacion.getLongitud() +
                     ". Fecha: " + ubicacion.getFechaHora();
             notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
         }
-
-        return convertirUbicacionAResponseDto(ubicacionGuardada);
     }
 
     // Convertir una entidad UbicacionAnimal a DTO de respuesta
