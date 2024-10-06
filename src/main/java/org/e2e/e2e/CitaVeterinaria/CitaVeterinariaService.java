@@ -79,4 +79,13 @@ public class CitaVeterinariaService {
         responseDto.setEstado(cita.getEstado());  // Agregamos el estado en el DTO de respuesta
         return responseDto;
     }
+
+    public CitaVeterinaria actualizarEstadoCita(Long id, EstadoCita nuevoEstado) {
+        CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cita no encontrada"));
+
+        // Actualizar el estado de la cita
+        cita.setEstado(nuevoEstado);
+        return citaVeterinariaRepository.save(cita);
+    }
 }

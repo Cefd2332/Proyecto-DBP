@@ -13,7 +13,7 @@ import java.io.IOException;
 public class FirebaseConfig {
 
     @Bean
-    public void initializeFirebase() throws IOException {
+    public FirebaseApp initializeFirebase() throws IOException {
         // Cambia esta ruta para apuntar a tu archivo JSON de servicio
         FileInputStream serviceAccount = new FileInputStream("C:\\Proyecto DBP\\Proyecto-DBP\\proyecto1-721e7-firebase-adminsdk-mkaih-e43e2d47a3.json");
 
@@ -21,6 +21,7 @@ public class FirebaseConfig {
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
 
-        FirebaseApp.initializeApp(options);
+        // Inicializa la aplicación Firebase y la retorna
+        return FirebaseApp.initializeApp(options);
     }
 }

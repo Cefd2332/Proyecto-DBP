@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -20,9 +21,21 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(usuarioService.obtenerUsuarioPorId(id));
+    public ResponseEntity<UsuarioResponseDto> obtenerUsuarioPorId(@PathVariable Long id) {
+        Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
+
+        // Retorna el DTO sin el token, ya que no es necesario aquí
+        UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getEmail(),
+                usuario.getDireccion(),
+                usuario.getRoles().stream().collect(Collectors.toList())
+        );
+
+        return ResponseEntity.ok(usuarioResponse);
     }
+
 
     @PostMapping
     public ResponseEntity<Usuario> registrarUsuario(@Valid @RequestBody UsuarioRequestDto usuarioDto) {

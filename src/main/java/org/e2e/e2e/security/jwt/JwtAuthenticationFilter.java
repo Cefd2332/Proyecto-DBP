@@ -28,17 +28,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        String token = jwtTokenUtil.getTokenFromRequest(request);
-        if (token != null && jwtTokenUtil.validateToken(token)) {
-            String username = jwtTokenUtil.getUsernameFromToken(token);
+        try {
+            // Extraer el token del encabezado de la solicitud
+            String token = jwtTokenUtil.getTokenFromRequest(request);
 
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+            // Validar el token
+            if (token != null) {
+                // Extraer el nombre de usuario del token
+                String username = jwtTokenUtil.getUsernameFromToken(token);
 
-            if (userDetails != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                JwtTokenUtil.setSecurityContext(userDetails, request);
+                // Cargar detalles del usuario desde el servicio de UserDetails
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+
+                // Validar el token comparándolo con los detalles del usuario
+                if (jwtTokenUtil.validateToken(token, userDetails)) {
+                    // Si el contexto de seguridad está vacío, establecer la autenticación
+                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                        // Configurar el contexto de seguridad con el usuario autenticado
+                        JwtTokenUtil.setSecurityContext(userDetails, request);
+                    }
+                }
             }
+        } catch (Exception ex) {
+            // Manejo de excepciones (opcionalmente loguear)
+            System.out.println("Error durante la validación del token JWT: " + ex.getMessage());
         }
 
+        // Continuar con el filtro
         chain.doFilter(request, response);
     }
 }

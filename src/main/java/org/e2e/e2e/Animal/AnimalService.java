@@ -31,6 +31,7 @@ public class AnimalService {
         Usuario adoptante = usuarioRepository.findById(animalDto.getAdoptanteId())
                 .orElseThrow(() -> new NotFoundException("Adoptante no encontrado"));
 
+        // Crear un nuevo objeto Animal y establecer sus atributos
         Animal animal = new Animal();
         animal.setNombre(animalDto.getNombre());
         animal.setEspecie(animalDto.getEspecie());
@@ -51,6 +52,7 @@ public class AnimalService {
     // Actualizar la información del animal
     public Animal actualizarAnimal(Long id, AnimalRequestDto animalDto) {
         Animal animal = obtenerAnimalPorId(id);
+
         animal.setNombre(animalDto.getNombre());
         animal.setEspecie(animalDto.getEspecie());
         animal.setEdad(animalDto.getEdad());
