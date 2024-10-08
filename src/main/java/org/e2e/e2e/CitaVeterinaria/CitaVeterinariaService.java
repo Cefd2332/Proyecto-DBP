@@ -7,6 +7,7 @@ import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.exceptions.NotFoundException;
+import org.e2e.e2e.exceptions.ConflictException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,11 @@ public class CitaVeterinariaService {
     // Guardar una nueva cita
     public CitaVeterinaria guardarCita(CitaVeterinariaRequestDto citaDto) {
         Animal animal = animalService.obtenerAnimalPorId(citaDto.getAnimalId());
+
+        // Verificar si ya existe una cita con el mismo veterinario en la misma fecha y hora para evitar conflictos
+        if (citaVeterinariaRepository.existsByFechaCitaAndVeterinario(citaDto.getFechaCita(), citaDto.getVeterinario())) {
+            throw new ConflictException("Ya existe una cita con el mismo veterinario en esa fecha y hora.");
+        }
 
         CitaVeterinaria cita = new CitaVeterinaria();
         cita.setFechaCita(citaDto.getFechaCita());

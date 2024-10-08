@@ -9,10 +9,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.scheduling.annotation.Async;
 
 import jakarta.validation.Valid;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,10 +31,11 @@ public class AuthController {
     private JwtTokenUtil jwtTokenUtil;  // Inyectar la utilidad para manejar el JWT
 
     @PostMapping("/register")
-    public ResponseEntity<UsuarioResponseDto> registrarUsuario(@Valid @RequestBody UsuarioRequestDto usuarioDto) {
+    @Async  // Hacer asíncrono el registro
+    public CompletableFuture<ResponseEntity<UsuarioResponseDto>> registrarUsuario(@Valid @RequestBody UsuarioRequestDto usuarioDto) {
         // Verificar si el usuario ya existe por su email
         if (usuarioRepository.findByEmail(usuarioDto.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body(null);  // Retornar error si el usuario ya existe
+            return CompletableFuture.completedFuture(ResponseEntity.badRequest().body(null));  // Retornar error si el usuario ya existe
         }
 
         // Crear una nueva instancia de Usuario
@@ -50,30 +53,33 @@ public class AuthController {
         // Guardar el usuario en la base de datos
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
-        // Generar el token JWT para el usuario guardado
-        UserDetails userDetails = createUserDetails(usuarioGuardado);
+        // Generar el token JWT para el usuario guardado de manera asíncrona
+        CompletableFuture<UserDetails> userDetailsFuture = createUserDetailsAsync(usuarioGuardado);
 
-        // Generar el token JWT con el UserDetails
-        String token = jwtTokenUtil.generateToken(userDetails);
+        return userDetailsFuture.thenApply(userDetails -> {
+            // Generar el token JWT con el UserDetails
+            String token = jwtTokenUtil.generateToken(userDetails);
 
-        // Retornar el usuario y el token en la respuesta
-        UsuarioResponseDto responseDto = new UsuarioResponseDto(
-                usuarioGuardado.getId(),
-                usuarioGuardado.getNombre(),
-                usuarioGuardado.getEmail(),
-                usuarioGuardado.getDireccion(),
-                token
-        );
-        return ResponseEntity.ok(responseDto);
+            // Retornar el usuario y el token en la respuesta
+            UsuarioResponseDto responseDto = new UsuarioResponseDto(
+                    usuarioGuardado.getId(),
+                    usuarioGuardado.getNombre(),
+                    usuarioGuardado.getEmail(),
+                    usuarioGuardado.getDireccion(),
+                    token
+            );
+            return ResponseEntity.ok(responseDto);
+        });
     }
 
-    // Método auxiliar para crear UserDetails a partir del usuario
-    private UserDetails createUserDetails(Usuario usuario) {
-        return new org.springframework.security.core.userdetails.User(
+    // Método auxiliar para crear UserDetails a partir del usuario de forma asíncrona
+    @Async
+    public CompletableFuture<UserDetails> createUserDetailsAsync(Usuario usuario) {
+        return CompletableFuture.completedFuture(new org.springframework.security.core.userdetails.User(
                 usuario.getEmail(),
                 usuario.getPassword(),
                 mapRolesToAuthorities(usuario.getRoles())  // Convertir roles a GrantedAuthority
-        );
+        ));
     }
 
     // Método auxiliar para convertir roles de String a GrantedAuthority

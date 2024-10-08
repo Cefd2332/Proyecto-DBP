@@ -3,10 +3,12 @@ package org.e2e.e2e.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
-import org.e2e.e2e.exceptions.NotFoundException;
+import org.e2e.e2e.exceptions.NotFoundException;  // Excepción personalizada para recursos no encontrados
+import org.e2e.e2e.exceptions.BadRequestException;  // Nueva excepción personalizada para datos no válidos
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,16 +22,27 @@ public class UsuarioService {
 
     // Obtener todos los usuarios
     public List<Usuario> obtenerTodosLosUsuarios() {
-        return usuarioRepository.findAll();
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        if (usuarios.isEmpty()) {
+            throw new NotFoundException("No se encontraron usuarios registrados.");
+        }
+        return usuarios;
     }
 
     // Obtener un usuario por ID
     public Usuario obtenerUsuarioPorId(Long id) {
-        return usuarioRepository.findById(id).orElseThrow(() -> new NotFoundException("Usuario no encontrado con ID: " + id));
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado con ID: " + id));
     }
 
     // Guardar un nuevo usuario
+    @Transactional
     public Usuario guardarUsuario(UsuarioRequestDto usuarioDto) {
+        if (usuarioDto.getNombre() == null || usuarioDto.getEmail() == null || usuarioDto.getDireccion() == null) {
+            throw new BadRequestException("Faltan datos obligatorios para crear el usuario.");
+        }
+
+
         Usuario usuario = new Usuario();
         usuario.setNombre(usuarioDto.getNombre());
         usuario.setEmail(usuarioDto.getEmail());
@@ -44,8 +57,14 @@ public class UsuarioService {
     }
 
     // Actualizar un usuario existente
+    @Transactional
     public Usuario actualizarUsuario(Long id, UsuarioRequestDto usuarioDto) {
         Usuario usuario = obtenerUsuarioPorId(id);  // Lanza excepción si no se encuentra
+
+        if (usuarioDto.getNombre() == null || usuarioDto.getEmail() == null || usuarioDto.getDireccion() == null) {
+            throw new BadRequestException("Faltan datos obligatorios para actualizar el usuario.");
+        }
+
         usuario.setNombre(usuarioDto.getNombre());
         usuario.setEmail(usuarioDto.getEmail());
         usuario.setDireccion(usuarioDto.getDireccion());
@@ -59,8 +78,13 @@ public class UsuarioService {
     }
 
     // Eliminar un usuario por ID
+    @Transactional
     public void eliminarUsuario(Long id) {
         Usuario usuario = obtenerUsuarioPorId(id);  // Lanza excepción si no se encuentra
+
+        if (!usuarioRepository.existsById(id)) {
+            throw new NotFoundException("Usuario no encontrado con ID: " + id);
+        }
 
         usuarioRepository.deleteById(id);
 

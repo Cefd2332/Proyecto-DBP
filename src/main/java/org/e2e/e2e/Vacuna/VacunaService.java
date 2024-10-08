@@ -7,7 +7,10 @@ import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.exceptions.NotFoundException;
+import org.e2e.e2e.exceptions.BadRequestException;  // Nueva excepción personalizada para datos no válidos
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +29,22 @@ public class VacunaService {
     // Obtener vacunas por animal
     public List<Vacuna> obtenerVacunasPorAnimal(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
+        if (animal == null) {
+            throw new NotFoundException("Animal no encontrado con ID: " + animalId);
+        }
         return animal.getVacunas();
     }
 
     // Guardar una nueva vacuna
     public Vacuna guardarVacuna(VacunaRequestDto vacunaDto) {
         Animal animal = animalService.obtenerAnimalPorId(vacunaDto.getAnimalId());
+        if (animal == null) {
+            throw new NotFoundException("Animal no encontrado con ID: " + vacunaDto.getAnimalId());
+        }
+
+        if (vacunaDto.getNombre() == null || vacunaDto.getFechaAplicacion() == null) {
+            throw new BadRequestException("Faltan datos obligatorios para registrar la vacuna.");
+        }
 
         Vacuna vacuna = new Vacuna();
         vacuna.setNombre(vacunaDto.getNombre());
@@ -42,7 +55,7 @@ public class VacunaService {
         Vacuna vacunaGuardada = vacunaRepository.save(vacuna);
 
         // Enviar correos y notificaciones
-        enviarNotificaciones(animal, vacuna, "Nueva vacuna registrada para " + animal.getNombre());
+        enviarNotificacionesAsync(animal, vacuna, "Nueva vacuna registrada para " + animal.getNombre());
 
         return vacunaGuardada;
     }
@@ -59,7 +72,7 @@ public class VacunaService {
         vacunaRepository.deleteById(id);
 
         // Enviar correos y notificaciones
-        enviarNotificaciones(animal, vacuna, "Vacuna eliminada para " + animal.getNombre());
+        enviarNotificacionesAsync(animal, vacuna, "Vacuna eliminada para " + animal.getNombre());
     }
 
     // Método programado para enviar recordatorios de vacunas
@@ -71,15 +84,23 @@ public class VacunaService {
         // Buscar vacunas próximas
         List<Vacuna> vacunasProximas = vacunaRepository.findVacunasProximas(today, nextWeek);
 
+        if (vacunasProximas.isEmpty()) {
+            throw new NotFoundException("No se encontraron vacunas próximas en la semana.");
+        }
+
         for (Vacuna vacuna : vacunasProximas) {
             Animal animal = vacuna.getAnimal();
-            enviarNotificaciones(animal, vacuna, "Recordatorio: Vacuna próxima para " + animal.getNombre());
+            enviarNotificacionesAsync(animal, vacuna, "Recordatorio: Vacuna próxima para " + animal.getNombre());
         }
     }
 
-    // Método auxiliar para enviar correos y notificaciones push
-    private void enviarNotificaciones(Animal animal, Vacuna vacuna, String subject) {
+    // Método auxiliar asíncrono para enviar correos y notificaciones push
+    @Async
+    protected void enviarNotificacionesAsync(@NotNull Animal animal, Vacuna vacuna, String subject) {
         Usuario adoptante = animal.getAdoptante();
+        if (adoptante == null) {
+            throw new NotFoundException("Adoptante no encontrado para el animal: " + animal.getNombre());
+        }
 
         // Enviar correo electrónico
         String emailSubject = subject;
@@ -103,6 +124,10 @@ public class VacunaService {
 
     // Convertir vacuna a DTO de respuesta
     public VacunaResponseDto convertirVacunaAResponseDto(Vacuna vacuna) {
+        if (vacuna == null) {
+            throw new NotFoundException("Vacuna no encontrada");
+        }
+
         VacunaResponseDto responseDto = new VacunaResponseDto();
         responseDto.setId(vacuna.getId());
         responseDto.setNombre(vacuna.getNombre());

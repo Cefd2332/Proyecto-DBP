@@ -1,11 +1,12 @@
 package org.e2e.e2e.Animal;
 
 import lombok.RequiredArgsConstructor;
+import org.e2e.e2e.Email.EmailEvent;
+import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Usuario.UsuarioRepository;
-import org.e2e.e2e.Notificacion.NotificacionPushService;
-import org.e2e.e2e.Email.EmailEvent;
-import org.e2e.e2e.exceptions.NotFoundException;
+import org.e2e.e2e.exceptions.NotFoundException; // Excepción personalizada
+import org.e2e.e2e.exceptions.ConflictException; // Excepción de conflicto si fuera necesaria
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,7 @@ public class AnimalService {
     // Guardar un nuevo animal
     public Animal guardarAnimal(AnimalRequestDto animalDto) {
         Usuario adoptante = usuarioRepository.findById(animalDto.getAdoptanteId())
-                .orElseThrow(() -> new NotFoundException("Adoptante no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Adoptante no encontrado con ID: " + animalDto.getAdoptanteId()));
 
         // Crear un nuevo objeto Animal y establecer sus atributos
         Animal animal = new Animal();
@@ -51,7 +52,7 @@ public class AnimalService {
     // Obtener un animal por ID
     public Animal obtenerAnimalPorId(Long id) {
         return animalRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Animal no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Animal no encontrado con ID: " + id));
     }
 
     // Actualizar la información del animal
@@ -64,7 +65,7 @@ public class AnimalService {
         animal.setEstadoSalud(animalDto.getEstadoSalud());
 
         Usuario adoptante = usuarioRepository.findById(animalDto.getAdoptanteId())
-                .orElseThrow(() -> new NotFoundException("Adoptante no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Adoptante no encontrado con ID: " + animalDto.getAdoptanteId()));
         animal.setAdoptante(adoptante);
 
         // Actualizar el estado del animal si se proporciona en el DTO
@@ -83,7 +84,7 @@ public class AnimalService {
     // Eliminar un animal
     public void eliminarAnimal(Long id) {
         Animal animal = animalRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Animal no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Animal no encontrado con ID: " + id));
 
         animalRepository.deleteById(id);
 
@@ -171,4 +172,3 @@ public class AnimalService {
         }
     }
 }
-

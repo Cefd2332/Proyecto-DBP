@@ -7,6 +7,7 @@ import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.exceptions.NotFoundException;
+import org.e2e.e2e.exceptions.ConflictException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,10 @@ public class UbicacionAnimalService {
     // Obtener ubicaciones por animal
     public List<UbicacionAnimalResponseDto> obtenerUbicaciones(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
+        if (animal == null) {
+            throw new NotFoundException("Animal no encontrado con ID: " + animalId);
+        }
+
         return animal.getUbicaciones().stream()
                 .map(this::convertirUbicacionAResponseDto)
                 .collect(Collectors.toList());
@@ -35,6 +40,17 @@ public class UbicacionAnimalService {
     // Guardar una nueva ubicación
     public UbicacionAnimalResponseDto guardarUbicacion(UbicacionAnimalRequestDto ubicacionDto) {
         Animal animal = animalService.obtenerAnimalPorId(ubicacionDto.getAnimalId());
+        if (animal == null) {
+            throw new NotFoundException("Animal no encontrado con ID: " + ubicacionDto.getAnimalId());
+        }
+
+        // Verificar si ya existe una ubicación con las mismas coordenadas para evitar conflictos
+        boolean existeUbicacion = ubicacionAnimalRepository.existsByLatitudAndLongitudAndAnimalId(
+                ubicacionDto.getLatitud(), ubicacionDto.getLongitud(), animal.getId());
+
+        if (existeUbicacion) {
+            throw new ConflictException("Ya existe una ubicación registrada con las mismas coordenadas para este animal.");
+        }
 
         UbicacionAnimal ubicacion = new UbicacionAnimal();
         ubicacion.setLatitud(ubicacionDto.getLatitud());

@@ -7,6 +7,7 @@ import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.exceptions.NotFoundException;
+import org.e2e.e2e.exceptions.ConflictException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class RegistroSaludService {
     // Obtener historial médico de un animal
     public List<RegistroSaludResponseDto> obtenerHistorialMedico(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
+        if (animal == null) {
+            throw new NotFoundException("Animal no encontrado con ID: " + animalId);
+        }
         return animal.getHistorialMedico().stream()
                 .map(this::convertirRegistroSaludAResponseDto)
                 .collect(Collectors.toList());
@@ -34,6 +38,17 @@ public class RegistroSaludService {
     // Guardar un nuevo registro de salud
     public RegistroSaludResponseDto guardarRegistroSalud(RegistroSaludRequestDto registroSaludDto) {
         Animal animal = animalService.obtenerAnimalPorId(registroSaludDto.getAnimalId());
+        if (animal == null) {
+            throw new NotFoundException("Animal no encontrado con ID: " + registroSaludDto.getAnimalId());
+        }
+
+        // Verificar si ya existe un registro en la misma fecha para evitar conflictos
+        boolean existeRegistro = registroSaludRepository.existsByFechaConsultaAndAnimalId(
+                registroSaludDto.getFechaConsulta(), animal.getId());
+
+        if (existeRegistro) {
+            throw new ConflictException("Ya existe un registro de salud para este animal en la fecha especificada.");
+        }
 
         RegistroSalud registroSalud = new RegistroSalud();
         registroSalud.setDescripcion(registroSaludDto.getDescripcion());
