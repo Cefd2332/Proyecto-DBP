@@ -15,7 +15,7 @@ public class FirebaseConfig {
     @Bean
     public FirebaseApp initializeFirebase() throws IOException {
         // Cambia esta ruta para apuntar a tu archivo JSON de servicio
-        FileInputStream serviceAccount = new FileInputStream("C:\\Proyecto DBP\\Proyecto-DBP\\proyecto1-721e7-firebase-adminsdk-mkaih-e43e2d47a3.json");
+        FileInputStream serviceAccount = new FileInputStream("proyecto1-721e7-firebase-adminsdk-mkaih-e43e2d47a3.json");
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))

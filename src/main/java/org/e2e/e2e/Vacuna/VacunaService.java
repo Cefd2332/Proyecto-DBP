@@ -8,7 +8,7 @@ import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.exceptions.NotFoundException;
 import org.e2e.e2e.exceptions.BadRequestException;  // Nueva excepción personalizada para datos no válidos
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
