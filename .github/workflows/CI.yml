@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'  # Ajusta a tu versión de Java si es diferente
+          distribution: 'temurin'
 
       - name: Cache Maven packages
         uses: actions/cache@v3
@@ -33,4 +34,4 @@ jobs:
         run: mvn -B package --file pom.xml
 
       - name: Run Tests
-        run: mvn test
+        run: mvn test -Dtest=org.e2e.e2e.*Test
