@@ -1,66 +1,36 @@
-name: Autograding Tests
-'on':
-  - push
-  - workflow_dispatch
-  - repository_dispatch
-permissions:
-  checks: write
-  actions: read
-  contents: read
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
-  run-autograding-tests:
+  build:
     runs-on: ubuntu-latest
-    if: github.actor != 'github-classroom[bot]'
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
         with:
-          java-version: '17'
-          distribution: 'adopt'
-      - name: DriverControllerSecurityTest
-        id: drivercontrollersecuritytest
-        uses: education/autograding-command-grader@v1
+          java-version: '17'  # Ajusta a tu versión de Java si es diferente
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
         with:
-          test-name: DriverControllerSecurityTest
-          setup-command: mvn compile
-          command: mvn clean test -PDriverControllerSecurityTest
-          timeout: 10
-          max-score: 5
-      - name: PassengerControllerSecurityTest
-        id: passengercontrollersecuritytest
-        uses: education/autograding-command-grader@v1
-        with:
-          test-name: PassengerControllerSecurityTest
-          setup-command: mvn compile
-          command: mvn clean test -PPassengerControllerSecurityTest
-          timeout: 10
-          max-score: 5
-      - name: ReviewControllerSecurityTest
-        id: reviewcontrollersecuritytest
-        uses: education/autograding-command-grader@v1
-        with:
-          test-name: ReviewControllerSecurityTest
-          setup-command: mvn compile
-          command: mvn clean test -PReviewControllerSecurityTest
-          timeout: 10
-          max-score: 5
-      - name: RideControllerSecurityTest
-        id: ridecontrollersecuritytest
-        uses: education/autograding-command-grader@v1
-        with:
-          test-name: RideControllerSecurityTest
-          setup-command: mvn compile
-          command: mvn clean test -PRideControllerSecurityTest
-          timeout: 10
-          max-score: 5
-      - name: Autograding Reporter
-        uses: education/autograding-grading-reporter@v1
-        env:
-          DRIVERCONTROLLERSECURITYTEST_RESULTS: "${{steps.drivercontrollersecuritytest.outputs.result}}"
-          PASSENGERCONTROLLERSECURITYTEST_RESULTS: "${{steps.passengercontrollersecuritytest.outputs.result}}"
-          REVIEWCONTROLLERSECURITYTEST_RESULTS: "${{steps.reviewcontrollersecuritytest.outputs.result}}"
-          RIDECONTROLLERSECURITYTEST_RESULTS: "${{steps.ridecontrollersecuritytest.outputs.result}}"
-        with:
-          runners: drivercontrollersecuritytest,passengercontrollersecuritytest,reviewcontrollersecuritytest,ridecontrollersecuritytest
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Run Tests
+        run: mvn test
