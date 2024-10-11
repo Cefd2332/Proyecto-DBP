@@ -1,6 +1,6 @@
-package org.e2e.e2e;
-import org.e2e.e2e.Adopcion.*;
+package org.e2e.e2e.Adopcion;
 import org.e2e.e2e.Animal.Animal;
+import org.e2e.e2e.Animal.AnimalRepository;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
@@ -14,10 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
-
 import java.time.LocalDate;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -28,6 +26,9 @@ class AdopcionServiceTest {
 
     @Mock
     private UsuarioService usuarioService;
+
+    @Mock
+    private AnimalRepository animalRepository;
 
     @Mock
     private AnimalService animalService;
@@ -101,6 +102,15 @@ class AdopcionServiceTest {
         requestDto.setAdoptanteId(1L);
         requestDto.setAnimalId(1L);
 
+        // Crear un animal de prueba
+        Animal animal = new Animal();
+        animal.setId(1L);
+        animal.setNombre("Max");
+
+        // Simular que el animal existe y es devuelto por el repositorio
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal));
+
+        // Simular que ya ha sido adoptado
         when(adopcionRepository.existsByAnimalId(1L)).thenReturn(true);
 
         // Verificar que se lanza la excepción ConflictException

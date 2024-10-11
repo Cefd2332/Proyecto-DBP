@@ -1,6 +1,4 @@
-package org.e2e.e2e;
-
-import org.e2e.e2e.Adopcion.*;
+package org.e2e.e2e.Adopcion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -8,10 +6,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import java.util.Collections;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -31,6 +27,7 @@ class AdopcionControllerTest {
 
     @Test
     void obtenerTodasLasAdopciones_exito() {
+        // Simulación de la respuesta esperada del servicio
         AdopcionResponseDto responseDto = new AdopcionResponseDto();
         responseDto.setId(1L);
         responseDto.setAnimalId(1L);
@@ -60,10 +57,8 @@ class AdopcionControllerTest {
         // Simulación de la respuesta esperada del servicio
         AdopcionResponseDto responseDto = new AdopcionResponseDto();
         responseDto.setId(1L);
-        responseDto.setAnimalId(1L);
-        responseDto.setAdoptanteId(1L);
 
-        // Usar doReturn para evitar problemas con thenReturn
+        // Simular el comportamiento del servicio
         doReturn(responseDto).when(adopcionService).registrarAdopcion(any(AdopcionRequestDto.class));
 
         // Llamar al método del controlador
@@ -89,13 +84,13 @@ class AdopcionControllerTest {
 
     @Test
     void obtenerAdopcionPorId_exito() {
-        // Simular los datos de respuesta DTO
+        // Simulación de la respuesta esperada del servicio
         AdopcionResponseDto responseDto = new AdopcionResponseDto();
         responseDto.setId(1L);
         responseDto.setAnimalId(1L);
         responseDto.setAdoptanteId(1L);
 
-        // Simular la llamada al servicio
+        // Simular el retorno desde el servicio
         doReturn(responseDto).when(adopcionService).obtenerAdopcionPorId(1L);
 
         // Llamar al método del controlador
