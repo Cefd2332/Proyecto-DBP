@@ -10,6 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -23,7 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class UbicacionAnimalControllerTest {
 
     @Autowired
@@ -42,6 +44,15 @@ class UbicacionAnimalControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @DynamicPropertySource
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", () -> "jdbc:h2:mem:testdb");
+        registry.add("spring.datasource.driverClassName", () -> "org.h2.Driver");
+        registry.add("spring.datasource.username", () -> "sa");
+        registry.add("spring.datasource.password", () -> "password");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.H2Dialect");
+    }
+
     @Test
     void registrarUbicacion_deberiaRetornar200() throws Exception {
         UbicacionAnimalRequestDto requestDto = new UbicacionAnimalRequestDto();
@@ -49,7 +60,7 @@ class UbicacionAnimalControllerTest {
         when(ubicacionAnimalService.guardarUbicacion(any())).thenReturn(responseDto);
 
         mockMvc.perform(post("/api/ubicaciones")
-                        .contentType(MediaType.APPLICATION_JSON) // Importación correcta
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"latitud\": 12.345, \"longitud\": 67.890, \"animalId\": 1 }"))
                 .andExpect(status().isOk());
     }
