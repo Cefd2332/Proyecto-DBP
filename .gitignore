@@ -1,3 +1,7 @@
+# Ignorar archivo específico
+proyecto1-721e7-firebase-adminsdk-mkaih-e43e2d47a3.json
+
+# Otros archivos y carpetas a ignorar
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
