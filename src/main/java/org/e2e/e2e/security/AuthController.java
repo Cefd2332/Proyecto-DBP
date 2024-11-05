@@ -89,3 +89,32 @@ public class AuthController {
                 .collect(Collectors.toSet());
     }
 }
+@PostMapping("/login")
+public CompletableFuture<ResponseEntity<UsuarioResponseDto>> login(@Valid @RequestBody LoginRequestDto loginDto) {
+    return usuarioRepository.findByEmail(loginDto.getEmail())
+        .thenApplyAsync(optionalUser -> {
+            if (optionalUser.isPresent()) {
+                Usuario usuario = optionalUser.get();
+                if (passwordEncoder.matches(loginDto.getPassword(), usuario.getPassword())) {
+                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                        usuario.getEmail(),
+                        usuario.getPassword(),
+                        mapRolesToAuthorities(usuario.getRoles())
+                    );
+                    String token = jwtTokenUtil.generateToken(userDetails);
+                    UsuarioResponseDto responseDto = new UsuarioResponseDto(
+                        usuario.getId(),
+                        usuario.getNombre(),
+                        usuario.getEmail(),
+                        usuario.getDireccion(),
+                        token
+                    );
+                    return ResponseEntity.ok(responseDto);
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        });
+}
