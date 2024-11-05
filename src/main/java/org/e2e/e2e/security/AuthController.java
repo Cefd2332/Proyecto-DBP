@@ -3,6 +3,7 @@ package org.e2e.e2e.security;
 import org.e2e.e2e.Usuario.*;
 import org.e2e.e2e.security.jwt.JwtTokenUtil;  // Importar la clase para generar el token
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.scheduling.annotation.Async;
 
 import jakarta.validation.Valid;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -88,33 +90,34 @@ public class AuthController {
                 .map(SimpleGrantedAuthority::new)  // Crear una nueva instancia de SimpleGrantedAuthority
                 .collect(Collectors.toSet());
     }
-}
-@PostMapping("/login")
-public CompletableFuture<ResponseEntity<UsuarioResponseDto>> login(@Valid @RequestBody LoginRequestDto loginDto) {
-    return usuarioRepository.findByEmail(loginDto.getEmail())
-        .thenApplyAsync(optionalUser -> {
-            if (optionalUser.isPresent()) {
-                Usuario usuario = optionalUser.get();
-                if (passwordEncoder.matches(loginDto.getPassword(), usuario.getPassword())) {
-                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                        usuario.getEmail(),
-                        usuario.getPassword(),
-                        mapRolesToAuthorities(usuario.getRoles())
-                    );
-                    String token = jwtTokenUtil.generateToken(userDetails);
-                    UsuarioResponseDto responseDto = new UsuarioResponseDto(
-                        usuario.getId(),
-                        usuario.getNombre(),
-                        usuario.getEmail(),
-                        usuario.getDireccion(),
-                        token
-                    );
-                    return ResponseEntity.ok(responseDto);
-                } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-            }
-        });
-}
+
+
+    @PostMapping("/login")
+    public CompletableFuture<ResponseEntity<UsuarioResponseDto>> login(@Valid @RequestBody LoginRequestDto loginDto) {
+        return usuarioRepository.findByEmail(loginDto.getEmail())
+                .thenApplyAsync(optionalUser -> {
+                    if (optionalUser.isPresent()) {
+                        Usuario usuario = optionalUser.get();
+                        if (passwordEncoder.matches(loginDto.getPassword(), usuario.getPassword())) {
+                            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                                    usuario.getEmail(),
+                                    usuario.getPassword(),
+                                    mapRolesToAuthorities(usuario.getRoles())
+                            );
+                            String token = jwtTokenUtil.generateToken(userDetails);
+                            UsuarioResponseDto responseDto = new UsuarioResponseDto(
+                                    usuario.getId(),
+                                    usuario.getNombre(),
+                                    usuario.getEmail(),
+                                    usuario.getDireccion(),
+                                    token
+                            );
+                            return ResponseEntity.ok(responseDto);
+                        } else {
+                            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+                        }
+                    } else {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+                    }
+                });
+}}
