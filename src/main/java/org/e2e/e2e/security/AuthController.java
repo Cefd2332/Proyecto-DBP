@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.ResponseEntity;
@@ -91,15 +92,14 @@ public class AuthController {
                 .collect(Collectors.toSet());
     }
 
-
     @PostMapping("/login")
+    @Async  // Hacer asíncrono el login
     public CompletableFuture<ResponseEntity<UsuarioResponseDto>> login(@Valid @RequestBody LoginRequestDto loginDto) {
-        return usuarioRepository.findByEmail(loginDto.getEmail())
-                .thenApplyAsync(optionalUser -> {
-                    if (optionalUser.isPresent()) {
-                        Usuario usuario = optionalUser.get();
+        return CompletableFuture.supplyAsync(() -> {
+            usuarioRepository.findByEmail(loginDto.getEmail())
+                    .map(usuario -> {
                         if (passwordEncoder.matches(loginDto.getPassword(), usuario.getPassword())) {
-                            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                            UserDetails userDetails = new User(
                                     usuario.getEmail(),
                                     usuario.getPassword(),
                                     mapRolesToAuthorities(usuario.getRoles())
@@ -116,8 +116,11 @@ public class AuthController {
                         } else {
                             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
                         }
-                    } else {
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-                    }
-                });
-}}
+                    })
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null));
+
+
+            return null;
+        });
+    }
+}
