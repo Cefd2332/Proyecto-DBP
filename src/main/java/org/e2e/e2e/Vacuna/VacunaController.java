@@ -1,7 +1,6 @@
 package org.e2e.e2e.Vacuna;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +9,14 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/vacunas")
-@RequiredArgsConstructor
 public class VacunaController {
 
     private final VacunaService vacunaService;
+
+    // Constructor para inyectar la dependencia VacunaService
+    public VacunaController(VacunaService vacunaService) {
+        this.vacunaService = vacunaService;
+    }
 
     @GetMapping("/{animalId}")
     public ResponseEntity<List<VacunaResponseDto>> obtenerVacunasPorAnimal(@PathVariable Long animalId) {

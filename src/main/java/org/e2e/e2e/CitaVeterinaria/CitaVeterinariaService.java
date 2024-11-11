@@ -1,6 +1,5 @@
 package org.e2e.e2e.CitaVeterinaria;
 
-import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
@@ -15,13 +14,23 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class CitaVeterinariaService {
 
     private final CitaVeterinariaRepository citaVeterinariaRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;
+
+    // Constructor manual para la inyección de dependencias
+    public CitaVeterinariaService(CitaVeterinariaRepository citaVeterinariaRepository,
+                                  AnimalService animalService,
+                                  ApplicationEventPublisher eventPublisher,
+                                  NotificacionPushService notificacionPushService) {
+        this.citaVeterinariaRepository = citaVeterinariaRepository;
+        this.animalService = animalService;
+        this.eventPublisher = eventPublisher;
+        this.notificacionPushService = notificacionPushService;
+    }
 
     // Obtener citas por animal
     public List<CitaVeterinaria> obtenerCitasPorAnimal(Long animalId) {
@@ -33,7 +42,6 @@ public class CitaVeterinariaService {
     public CitaVeterinaria guardarCita(CitaVeterinariaRequestDto citaDto) {
         Animal animal = animalService.obtenerAnimalPorId(citaDto.getAnimalId());
 
-        // Verificar si ya existe una cita con el mismo veterinario en la misma fecha y hora para evitar conflictos
         if (citaVeterinariaRepository.existsByFechaCitaAndVeterinario(citaDto.getFechaCita(), citaDto.getVeterinario())) {
             throw new ConflictException("Ya existe una cita con el mismo veterinario en esa fecha y hora.");
         }
@@ -44,10 +52,7 @@ public class CitaVeterinariaService {
         cita.setEstado(citaDto.getEstado() != null ? citaDto.getEstado() : EstadoCita.PENDIENTE);
         cita.setAnimal(animal);
 
-        // Guardar la cita en la base de datos
         CitaVeterinaria citaGuardada = citaVeterinariaRepository.save(cita);
-
-        // Enviar notificación de creación (Asíncrono)
         enviarNotificacionesAsync(citaGuardada, "Nueva cita veterinaria para " + animal.getNombre());
 
         return citaGuardada;
@@ -58,13 +63,8 @@ public class CitaVeterinariaService {
         CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cita veterinaria no encontrada"));
 
-        // Obtener el animal relacionado a la cita antes de eliminarla
         Animal animal = cita.getAnimal();
-
-        // Eliminar la cita
         citaVeterinariaRepository.deleteById(id);
-
-        // Enviar notificación de eliminación (Asíncrono)
         enviarNotificacionesAsync(cita, "Cita veterinaria eliminada para " + animal.getNombre());
     }
 
@@ -73,11 +73,8 @@ public class CitaVeterinariaService {
         CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cita no encontrada"));
 
-        // Actualizar el estado de la cita
         cita.setEstado(nuevoEstado);
         CitaVeterinaria citaActualizada = citaVeterinariaRepository.save(cita);
-
-        // Enviar notificación de actualización de estado (Asíncrono)
         enviarNotificacionesAsync(citaActualizada, "Estado de cita actualizado para " + cita.getAnimal().getNombre());
 
         return citaActualizada;
@@ -100,7 +97,6 @@ public class CitaVeterinariaService {
         Animal animal = cita.getAnimal();
         Usuario adoptante = animal.getAdoptante();
 
-        // Enviar correo electrónico
         String emailSubject = subject;
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
                 "Detalles de la cita para su mascota " + animal.getNombre() + ":\n" +
@@ -112,7 +108,6 @@ public class CitaVeterinariaService {
 
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        // Enviar notificación push al adoptante si tiene un token válido
         if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
             String pushTitle = subject;
             String pushBody = "Fecha de la cita: " + cita.getFechaCita() +

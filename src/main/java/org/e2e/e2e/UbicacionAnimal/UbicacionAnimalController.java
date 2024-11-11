@@ -1,7 +1,6 @@
 package org.e2e.e2e.UbicacionAnimal;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,10 +8,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/ubicaciones")
-@RequiredArgsConstructor
 public class UbicacionAnimalController {
 
     private final UbicacionAnimalService ubicacionAnimalService;
+
+    // Constructor manual para inyección de dependencias
+    public UbicacionAnimalController(UbicacionAnimalService ubicacionAnimalService) {
+        this.ubicacionAnimalService = ubicacionAnimalService;
+    }
 
     @GetMapping("/{animalId}")
     public ResponseEntity<List<UbicacionAnimalResponseDto>> obtenerUbicaciones(@PathVariable Long animalId) {

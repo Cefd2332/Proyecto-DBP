@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import jakarta.validation.Valid;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -64,12 +65,13 @@ public class AuthController {
             String token = jwtTokenUtil.generateToken(userDetails);
 
             // Retornar el usuario y el token en la respuesta
-            UsuarioResponseDto responseDto = new UsuarioResponseDto(
+            UsuarioResponseDto responseDto;
+            responseDto = new UsuarioResponseDto(
                     usuarioGuardado.getId(),
                     usuarioGuardado.getNombre(),
                     usuarioGuardado.getEmail(),
                     usuarioGuardado.getDireccion(),
-                    token
+                    Collections.singletonList(token)
             );
             return ResponseEntity.ok(responseDto);
         });
@@ -85,7 +87,7 @@ public class AuthController {
         ));
     }
 
-    // Método auxiliar para convertir roles de String a GrantedAuthority
+    // Método auxiliar para convertir roles de String a GrantedAuthorit
     private Set<GrantedAuthority> mapRolesToAuthorities(Set<String> roles) {
         return roles.stream()
                 .map(SimpleGrantedAuthority::new)  // Crear una nueva instancia de SimpleGrantedAuthority
@@ -110,7 +112,7 @@ public class AuthController {
                                     usuario.getNombre(),
                                     usuario.getEmail(),
                                     usuario.getDireccion(),
-                                    token
+                                    Collections.singletonList(token)
                             );
                             return ResponseEntity.ok(responseDto);
                         } else {

@@ -1,7 +1,6 @@
 package org.e2e.e2e.Animal;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +9,14 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/animales")
-@RequiredArgsConstructor
 public class AnimalController {
 
     private final AnimalService animalService;
+
+    // Constructor manual sin Lombok
+    public AnimalController(AnimalService animalService) {
+        this.animalService = animalService;
+    }
 
     // Obtener todos los animales
     @GetMapping

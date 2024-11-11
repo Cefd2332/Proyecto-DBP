@@ -1,6 +1,5 @@
 package org.e2e.e2e.Adopcion;
 
-import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
@@ -8,21 +7,33 @@ import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Usuario.UsuarioService;
 import org.e2e.e2e.exceptions.ConflictException;
-import org.e2e.e2e.exceptions.NotFoundException;  // Excepción personalizada para recursos no encontrados
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class AdopcionService {
 
     private final AdopcionRepository adopcionRepository;
     private final UsuarioService usuarioService;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
-    private final NotificacionPushService notificacionPushService;  // Inyección del servicio de notificaciones push
+    private final NotificacionPushService notificacionPushService;
+
+    // Constructor manual para la inyección de dependencias
+    public AdopcionService(AdopcionRepository adopcionRepository,
+                           UsuarioService usuarioService,
+                           AnimalService animalService,
+                           ApplicationEventPublisher eventPublisher,
+                           NotificacionPushService notificacionPushService) {
+        this.adopcionRepository = adopcionRepository;
+        this.usuarioService = usuarioService;
+        this.animalService = animalService;
+        this.eventPublisher = eventPublisher;
+        this.notificacionPushService = notificacionPushService;
+    }
 
     // Obtener todas las adopciones
     public List<Adopcion> obtenerTodasLasAdopciones() {
@@ -47,7 +58,7 @@ public class AdopcionService {
 
         Adopcion adopcionGuardada = adopcionRepository.save(adopcion);
 
-        // Enviar correo de confirmación
+        // Enviar correo de confirmación y notificaciones
         enviarNotificacionesAdopcion(adoptante, animal, adopcion);
 
         return adopcionGuardada;

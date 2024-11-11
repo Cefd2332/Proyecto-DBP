@@ -1,6 +1,5 @@
 package org.e2e.e2e.RegistroSalud;
 
-import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class RegistroSaludService {
 
     private final RegistroSaludRepository registroSaludRepository;
@@ -24,7 +22,23 @@ public class RegistroSaludService {
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;
 
-    // Obtener historial médico de un animal
+    // Constructor que inyecta todas las dependencias
+    public RegistroSaludService(RegistroSaludRepository registroSaludRepository,
+                                AnimalService animalService,
+                                ApplicationEventPublisher eventPublisher,
+                                NotificacionPushService notificacionPushService) {
+        this.registroSaludRepository = registroSaludRepository;
+        this.animalService = animalService;
+        this.eventPublisher = eventPublisher;
+        this.notificacionPushService = notificacionPushService;
+    }
+
+    /**
+     * Obtener el historial médico de un animal por su ID.
+     *
+     * @param animalId ID del animal.
+     * @return Lista de registros de salud.
+     */
     public List<RegistroSaludResponseDto> obtenerHistorialMedico(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
         if (animal == null) {
@@ -35,7 +49,12 @@ public class RegistroSaludService {
                 .collect(Collectors.toList());
     }
 
-    // Guardar un nuevo registro de salud
+    /**
+     * Guardar un nuevo registro de salud.
+     *
+     * @param registroSaludDto DTO con los datos del registro de salud.
+     * @return DTO de respuesta con los datos del registro guardado.
+     */
     public RegistroSaludResponseDto guardarRegistroSalud(RegistroSaludRequestDto registroSaludDto) {
         Animal animal = animalService.obtenerAnimalPorId(registroSaludDto.getAnimalId());
         if (animal == null) {
@@ -65,7 +84,11 @@ public class RegistroSaludService {
         return convertirRegistroSaludAResponseDto(registroGuardado);
     }
 
-    // Eliminar un registro de salud
+    /**
+     * Eliminar un registro de salud por su ID.
+     *
+     * @param id ID del registro de salud a eliminar.
+     */
     public void eliminarRegistroSalud(Long id) {
         RegistroSalud registroSalud = registroSaludRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Registro de salud no encontrado con ID: " + id));
@@ -76,11 +99,17 @@ public class RegistroSaludService {
         // Eliminar el registro de salud
         registroSaludRepository.deleteById(id);
 
-        // Enviar correo sobre la eliminación del registro de salud de forma asíncrona
+        // Enviar notificación sobre la eliminación del registro de salud de forma asíncrona
         enviarNotificacionesAsync(animal, registroSalud, "Registro de salud eliminado para " + animal.getNombre());
     }
 
-    // Método auxiliar para enviar notificaciones (correo y push) de manera asíncrona
+    /**
+     * Método auxiliar para enviar notificaciones (correo y push) de manera asíncrona.
+     *
+     * @param animal       Animal asociado al registro de salud.
+     * @param registroSalud Registro de salud que se ha creado o eliminado.
+     * @param subject      Asunto de la notificación.
+     */
     @Async
     public void enviarNotificacionesAsync(Animal animal, RegistroSalud registroSalud, String subject) {
         Usuario adoptante = animal.getAdoptante();
@@ -107,7 +136,12 @@ public class RegistroSaludService {
         }
     }
 
-    // Convertir un registro de salud a DTO de respuesta
+    /**
+     * Convertir un registro de salud a DTO de respuesta.
+     *
+     * @param registroSalud Registro de salud a convertir.
+     * @return DTO de respuesta.
+     */
     public RegistroSaludResponseDto convertirRegistroSaludAResponseDto(RegistroSalud registroSalud) {
         RegistroSaludResponseDto responseDto = new RegistroSaludResponseDto();
         responseDto.setId(registroSalud.getId());

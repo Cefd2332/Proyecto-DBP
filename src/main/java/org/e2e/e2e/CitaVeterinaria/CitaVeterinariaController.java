@@ -1,7 +1,6 @@
 package org.e2e.e2e.CitaVeterinaria;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +10,14 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/citas")
-@RequiredArgsConstructor
 public class CitaVeterinariaController {
 
     private final CitaVeterinariaService citaVeterinariaService;
+
+    // Constructor manual para la inyección de dependencias
+    public CitaVeterinariaController(CitaVeterinariaService citaVeterinariaService) {
+        this.citaVeterinariaService = citaVeterinariaService;
+    }
 
     @GetMapping("/{animalId}")
     public ResponseEntity<List<CitaVeterinariaResponseDto>> obtenerCitasPorAnimal(@PathVariable Long animalId) {

@@ -1,6 +1,5 @@
 package org.e2e.e2e.Animal;
 
-import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
@@ -11,9 +10,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class AnimalService {
 
     private final AnimalRepository animalRepository;
@@ -21,6 +20,19 @@ public class AnimalService {
     private final RegistroEstadoAnimalRepository registroEstadoAnimalRepository;
     private final NotificacionPushService notificacionPushService;
     private final ApplicationEventPublisher eventPublisher;
+
+    // Constructor que inyecta todas las dependencias
+    public AnimalService(AnimalRepository animalRepository,
+                         UsuarioRepository usuarioRepository,
+                         RegistroEstadoAnimalRepository registroEstadoAnimalRepository,
+                         NotificacionPushService notificacionPushService,
+                         ApplicationEventPublisher eventPublisher) {
+        this.animalRepository = animalRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.registroEstadoAnimalRepository = registroEstadoAnimalRepository;
+        this.notificacionPushService = notificacionPushService;
+        this.eventPublisher = eventPublisher;
+    }
 
     // Obtener todos los animales
     public List<Animal> obtenerTodosLosAnimales() {
@@ -134,7 +146,7 @@ public class AnimalService {
         Animal animal = obtenerAnimalPorId(animalId);
         return animal.getRegistroEstadoAnimal().stream()
                 .map(this::convertirRegistroEstadoAResponseDto)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     // Conversión de RegistroEstadoAnimal a DTO

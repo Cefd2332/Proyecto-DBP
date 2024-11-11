@@ -9,10 +9,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/registro-salud")
-@RequiredArgsConstructor
 public class RegistroSaludController {
 
     private final RegistroSaludService registroSaludService;
+
+    // Constructor manual
+    public RegistroSaludController(RegistroSaludService registroSaludService) {
+        this.registroSaludService = registroSaludService;
+    }
 
     @GetMapping("/{animalId}")
     public ResponseEntity<List<RegistroSaludResponseDto>> obtenerHistorialMedico(@PathVariable Long animalId) {

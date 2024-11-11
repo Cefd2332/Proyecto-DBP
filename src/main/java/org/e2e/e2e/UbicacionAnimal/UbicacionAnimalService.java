@@ -1,6 +1,5 @@
 package org.e2e.e2e.UbicacionAnimal;
 
-import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
@@ -17,13 +16,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class UbicacionAnimalService {
 
     private final UbicacionAnimalRepository ubicacionAnimalRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;
+
+    // Constructor manual para la inyección de dependencias
+    public UbicacionAnimalService(UbicacionAnimalRepository ubicacionAnimalRepository,
+                                  AnimalService animalService,
+                                  ApplicationEventPublisher eventPublisher,
+                                  NotificacionPushService notificacionPushService) {
+        this.ubicacionAnimalRepository = ubicacionAnimalRepository;
+        this.animalService = animalService;
+        this.eventPublisher = eventPublisher;
+        this.notificacionPushService = notificacionPushService;
+    }
 
     // Obtener ubicaciones por animal
     public List<UbicacionAnimalResponseDto> obtenerUbicaciones(Long animalId) {
@@ -44,7 +53,6 @@ public class UbicacionAnimalService {
             throw new NotFoundException("Animal no encontrado con ID: " + ubicacionDto.getAnimalId());
         }
 
-        // Verificar si ya existe una ubicación con las mismas coordenadas para evitar conflictos
         boolean existeUbicacion = ubicacionAnimalRepository.existsByLatitudAndLongitudAndAnimalId(
                 ubicacionDto.getLatitud(), ubicacionDto.getLongitud(), animal.getId());
 
@@ -58,10 +66,8 @@ public class UbicacionAnimalService {
         ubicacion.setFechaHora(LocalDateTime.now());
         ubicacion.setAnimal(animal);
 
-        // Guardar la ubicación en la base de datos
         UbicacionAnimal ubicacionGuardada = ubicacionAnimalRepository.save(ubicacion);
 
-        // Enviar notificaciones de forma asíncrona
         enviarNotificacionesAsync(animal, ubicacion, "Nueva ubicación registrada para " + animal.getNombre());
 
         return convertirUbicacionAResponseDto(ubicacionGuardada);
@@ -72,7 +78,6 @@ public class UbicacionAnimalService {
     public void enviarNotificacionesAsync(Animal animal, UbicacionAnimal ubicacion, String subject) {
         Usuario adoptante = animal.getAdoptante();
 
-        // Enviar correo electrónico
         String emailSubject = subject;
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
                 "Se ha registrado una nueva ubicación para su mascota " + animal.getNombre() + ".\n" +
@@ -84,7 +89,6 @@ public class UbicacionAnimalService {
 
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        // Enviar notificación push al adoptante si tiene un token válido
         if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
             String pushTitle = subject;
             String pushBody = "Se ha registrado una nueva ubicación para tu mascota " + animal.getNombre() +
@@ -107,7 +111,6 @@ public class UbicacionAnimalService {
 
     // Eliminar una ubicación por ID
     public void eliminarUbicacion(Long id) {
-        // Verificar si la ubicación existe antes de eliminar
         if (!ubicacionAnimalRepository.existsById(id)) {
             throw new NotFoundException("Ubicación no encontrada con ID: " + id);
         }

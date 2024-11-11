@@ -1,7 +1,6 @@
 package org.e2e.e2e.Usuario;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Notificacion.Notificacion;
 
@@ -11,8 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Data
-@Table(name = "usuarios") // Se puede definir el nombre de la tabla explícitamente
+@Table(name = "usuarios")
 public class Usuario {
 
     @Id
@@ -28,7 +26,6 @@ public class Usuario {
 
     private String password;
 
-    // Campo para almacenar el token FCM para notificaciones push
     private String token;
 
     @OneToMany(mappedBy = "adoptante", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -37,11 +34,105 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notificacion> notificaciones = new ArrayList<>();
 
-    // Relación para almacenar los roles de usuario (muchos a muchos)
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"))
     @Column(name = "rol")
-    private Set<String> roles = new HashSet<>();  // Los roles pueden ser "ROLE_USER", "ROLE_ADMIN", etc.
+    private Set<String> roles = new HashSet<>();
 
-    
+    // Constructores
+    public Usuario() {
+    }
+
+    public Usuario(String nombre, String email, String direccion, String password, String token) {
+        this.nombre = nombre;
+        this.email = email;
+        this.direccion = direccion;
+        this.password = password;
+        this.token = token;
+    }
+
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public List<Animal> getAnimalesAdoptados() {
+        return animalesAdoptados;
+    }
+
+    public void setAnimalesAdoptados(List<Animal> animalesAdoptados) {
+        this.animalesAdoptados = animalesAdoptados;
+    }
+
+    public List<Notificacion> getNotificaciones() {
+        return notificaciones;
+    }
+
+    public void setNotificaciones(List<Notificacion> notificaciones) {
+        this.notificaciones = notificaciones;
+    }
+
+    public Set<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
+    }
+
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "id=" + id +
+                ", nombre='" + nombre + '\'' +
+                ", email='" + email + '\'' +
+                ", direccion='" + direccion + '\'' +
+                ", token='" + token + '\'' +
+                ", roles=" + roles +
+                '}';
+    }
 }

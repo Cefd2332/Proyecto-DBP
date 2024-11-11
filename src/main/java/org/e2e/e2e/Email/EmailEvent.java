@@ -1,12 +1,35 @@
 package org.e2e.e2e.Email;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public class EmailEvent {
-    private String to;
-    private String subject;
-    private String text;
+
+    private final String to;
+    private final String subject;
+    private final String text;
+
+    public EmailEvent(String to, String subject, String text) {
+        this.to = to;
+        this.subject = subject;
+        this.text = text;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    @Override
+    public String toString() {
+        return "EmailEvent{" +
+                "to='" + to + '\'' +
+                ", subject='" + subject + '\'' +
+                ", text='" + text + '\'' +
+                '}';
+    }
 }

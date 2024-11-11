@@ -1,6 +1,5 @@
 package org.e2e.e2e.Notificacion;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,10 +8,14 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/notificaciones")
-@RequiredArgsConstructor
 public class NotificacionController {
 
     private final NotificacionService notificacionService;
+
+    // Constructor sin Lombok
+    public NotificacionController(NotificacionService notificacionService) {
+        this.notificacionService = notificacionService;
+    }
 
     @GetMapping("/{usuarioId}")
     public ResponseEntity<List<NotificacionResponseDto>> obtenerNotificacionesPorUsuario(@PathVariable Long usuarioId) {

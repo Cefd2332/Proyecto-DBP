@@ -16,6 +16,7 @@ public class UsuarioResponseDto {
     private String email;
     private String direccion;
     private String token;  // El token JWT
+    private List<String> roles;  // Lista de roles del usuario
 
     // Constructor sin token para las respuestas comunes
     public UsuarioResponseDto(Long id, String nombre, String email, String direccion, List<String> roles) {
@@ -23,14 +24,7 @@ public class UsuarioResponseDto {
         this.nombre = nombre;
         this.email = email;
         this.direccion = direccion;
+        this.roles = roles;
     }
 
-    // Constructor con token solo cuando sea necesario (por ejemplo en autenticación)
-    public UsuarioResponseDto(Long id, String nombre, String email, String direccion, String token, List<String> roles) {
-        this.id = id;
-        this.nombre = nombre;
-        this.email = email;
-        this.direccion = direccion;
-        this.token = token;
-    }
 }

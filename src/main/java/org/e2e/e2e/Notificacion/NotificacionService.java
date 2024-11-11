@@ -1,6 +1,5 @@
 package org.e2e.e2e.Notificacion;
 
-import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.Usuario.UsuarioService;
 import org.e2e.e2e.exceptions.NotFoundException;  // Importar la excepción de no encontrado
@@ -10,12 +9,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class NotificacionService {
 
     private final NotificacionRepository notificacionRepository;
     private final UsuarioService usuarioService;
-    private final NotificacionPushService notificacionPushService;  // Inyectamos el servicio de notificaciones push
+    private final NotificacionPushService notificacionPushService;
+
+    // Constructor manual que inicializa las dependencias
+    public NotificacionService(NotificacionRepository notificacionRepository,
+                               UsuarioService usuarioService,
+                               NotificacionPushService notificacionPushService) {
+        this.notificacionRepository = notificacionRepository;
+        this.usuarioService = usuarioService;
+        this.notificacionPushService = notificacionPushService;
+    }
 
     // Obtener las notificaciones por usuario
     public List<Notificacion> obtenerNotificacionesPorUsuario(Long usuarioId) {

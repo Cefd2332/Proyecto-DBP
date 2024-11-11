@@ -1,13 +1,12 @@
 package org.e2e.e2e.Vacuna;
 
-import lombok.RequiredArgsConstructor;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.exceptions.NotFoundException;
-import org.e2e.e2e.exceptions.BadRequestException;  // Nueva excepción personalizada para datos no válidos
+import org.e2e.e2e.exceptions.BadRequestException;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
@@ -18,13 +17,21 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class VacunaService {
 
     private final VacunaRepository vacunaRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;
+
+    // Constructor para inyectar dependencias manualmente
+    public VacunaService(VacunaRepository vacunaRepository, AnimalService animalService,
+                         ApplicationEventPublisher eventPublisher, NotificacionPushService notificacionPushService) {
+        this.vacunaRepository = vacunaRepository;
+        this.animalService = animalService;
+        this.eventPublisher = eventPublisher;
+        this.notificacionPushService = notificacionPushService;
+    }
 
     // Obtener vacunas por animal
     public List<Vacuna> obtenerVacunasPorAnimal(Long animalId) {
@@ -65,13 +72,10 @@ public class VacunaService {
         Vacuna vacuna = vacunaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Vacuna no encontrada con ID: " + id));
 
-        // Obtener el animal relacionado
         Animal animal = vacuna.getAnimal();
 
-        // Eliminar la vacuna
         vacunaRepository.deleteById(id);
 
-        // Enviar correos y notificaciones
         enviarNotificacionesAsync(animal, vacuna, "Vacuna eliminada para " + animal.getNombre());
     }
 
@@ -81,7 +85,6 @@ public class VacunaService {
         LocalDate today = LocalDate.now();
         LocalDate nextWeek = today.plusDays(7);
 
-        // Buscar vacunas próximas
         List<Vacuna> vacunasProximas = vacunaRepository.findVacunasProximas(today, nextWeek);
 
         if (vacunasProximas.isEmpty()) {
@@ -102,7 +105,6 @@ public class VacunaService {
             throw new NotFoundException("Adoptante no encontrado para el animal: " + animal.getNombre());
         }
 
-        // Enviar correo electrónico
         String emailSubject = subject;
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
                 "Se ha realizado la siguiente acción en la vacunación de su mascota " + animal.getNombre() + ":\n" +
@@ -113,7 +115,6 @@ public class VacunaService {
 
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        // Enviar notificación push al adoptante si tiene un token válido
         if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
             String pushTitle = subject;
             String pushBody = "Se ha registrado una acción relacionada con la vacuna de tu mascota " + animal.getNombre() +
