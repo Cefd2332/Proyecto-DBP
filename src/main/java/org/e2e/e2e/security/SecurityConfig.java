@@ -41,34 +41,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(withDefaults())  // Habilitar CORS con la configuración por defecto
+                .cors(withDefaults())  // Habilitar CORS con la configuración definida en CorsConfigurationSource
                 .csrf(csrf -> csrf.disable())  // Deshabilitar CSRF para API
                 .authorizeHttpRequests(auth -> auth
                         // Permitir rutas de autenticación y registro sin autenticación
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // Sólo los administradores pueden gestionar usuarios
+                        // Permitir todas las rutas de otros endpoints (puedes ajustar según tus necesidades)
                         .requestMatchers("/api/usuarios/**").permitAll()
-
-                        // Los usuarios y administradores pueden adoptar animales
                         .requestMatchers("/api/adopciones/**").permitAll()
-
-                        // Sólo los administradores pueden gestionar animales
                         .requestMatchers("/api/animales/**").permitAll()
-
-                        // Los usuarios y administradores pueden gestionar citas
                         .requestMatchers("/api/citas/**").permitAll()
-
-                        // Los usuarios y administradores pueden gestionar registros de salud
                         .requestMatchers("/api/registro-salud/**").permitAll()
-
-                        // Los usuarios y administradores pueden gestionar ubicaciones
                         .requestMatchers("/api/ubicaciones/**").permitAll()
-
-                        // Los usuarios y administradores pueden gestionar vacunas
                         .requestMatchers("/api/vacunas/**").permitAll()
-
-                        // Los usuarios y administradores pueden gestionar notificaciones
                         .requestMatchers("/api/notificaciones/**").permitAll()
 
                         // Cualquier otra solicitud requiere autenticación
@@ -88,12 +74,19 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));  // Permitir todos los orígenes
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
+        // Especificar el origen permitido (React frontend)
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        // Permitir métodos HTTP específicos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        // Permitir encabezados específicos
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // Permitir credenciales
         configuration.setAllowCredentials(true);
+        // Opcional: establecer el tiempo de vida de la configuración CORS
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Aplicar la configuración a todas las rutas
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
