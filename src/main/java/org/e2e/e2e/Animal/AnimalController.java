@@ -68,4 +68,19 @@ public class AnimalController {
         List<RegistroEstadoAnimalResponseDto> historial = animalService.obtenerHistorialEstados(id);
         return ResponseEntity.ok(historial);
     }
+
+    // **Nuevo Endpoint: Obtener animales por ID de usuario**
+    /**
+     * Obtiene todos los animales asociados a un usuario específico.
+     *
+     * @param usuarioId El ID del usuario.
+     * @return Lista de AnimalResponseDto asociados al usuario.
+     */
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<AnimalResponseDto>> obtenerAnimalesPorUsuarioId(@PathVariable Long usuarioId) {
+        List<AnimalResponseDto> animales = animalService.obtenerAnimalesPorAdoptanteId(usuarioId).stream()
+                .map(animalService::convertirAnimalAResponseDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(animales);
+    }
 }

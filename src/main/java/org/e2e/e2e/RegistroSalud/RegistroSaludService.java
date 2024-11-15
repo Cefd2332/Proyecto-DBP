@@ -1,12 +1,14 @@
 package org.e2e.e2e.RegistroSalud;
 
+import org.e2e.e2e.Adoptante.Adoptante;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
-import org.e2e.e2e.Usuario.Usuario;
 import org.e2e.e2e.exceptions.NotFoundException;
 import org.e2e.e2e.exceptions.ConflictException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -17,12 +19,21 @@ import java.util.stream.Collectors;
 @Service
 public class RegistroSaludService {
 
+    private static final Logger logger = LoggerFactory.getLogger(RegistroSaludService.class);
+
     private final RegistroSaludRepository registroSaludRepository;
     private final AnimalService animalService;
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;
 
-    // Constructor que inyecta todas las dependencias
+    /**
+     * Constructor que inyecta todas las dependencias necesarias.
+     *
+     * @param registroSaludRepository Repositorio para manejar registros de salud.
+     * @param animalService           Servicio para manejar operaciones relacionadas con animales.
+     * @param eventPublisher          Publicador de eventos para enviar correos electrónicos.
+     * @param notificacionPushService Servicio para enviar notificaciones push.
+     */
     public RegistroSaludService(RegistroSaludRepository registroSaludRepository,
                                 AnimalService animalService,
                                 ApplicationEventPublisher eventPublisher,
@@ -41,9 +52,7 @@ public class RegistroSaludService {
      */
     public List<RegistroSaludResponseDto> obtenerHistorialMedico(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
-        if (animal == null) {
-            throw new NotFoundException("Animal no encontrado con ID: " + animalId);
-        }
+        // No es necesario verificar null, ya que obtenerAnimalPorId lanza NotFoundException si no encuentra
         return animal.getHistorialMedico().stream()
                 .map(this::convertirRegistroSaludAResponseDto)
                 .collect(Collectors.toList());
@@ -57,9 +66,6 @@ public class RegistroSaludService {
      */
     public RegistroSaludResponseDto guardarRegistroSalud(RegistroSaludRequestDto registroSaludDto) {
         Animal animal = animalService.obtenerAnimalPorId(registroSaludDto.getAnimalId());
-        if (animal == null) {
-            throw new NotFoundException("Animal no encontrado con ID: " + registroSaludDto.getAnimalId());
-        }
 
         // Verificar si ya existe un registro en la misma fecha para evitar conflictos
         boolean existeRegistro = registroSaludRepository.existsByFechaConsultaAndAnimalId(
@@ -106,13 +112,13 @@ public class RegistroSaludService {
     /**
      * Método auxiliar para enviar notificaciones (correo y push) de manera asíncrona.
      *
-     * @param animal       Animal asociado al registro de salud.
-     * @param registroSalud Registro de salud que se ha creado o eliminado.
-     * @param subject      Asunto de la notificación.
+     * @param animal        Animal asociado al registro de salud.
+     * @param registroSalud  Registro de salud que se ha creado o eliminado.
+     * @param subject       Asunto de la notificación.
      */
     @Async
     public void enviarNotificacionesAsync(Animal animal, RegistroSalud registroSalud, String subject) {
-        Usuario adoptante = animal.getAdoptante();
+        Adoptante adoptante = animal.getAdoptante();
 
         // Enviar correo electrónico
         String emailSubject = subject;
@@ -124,15 +130,18 @@ public class RegistroSaludService {
                 "Saludos,\n" +
                 "Equipo de Adopción y Seguimiento de Animales";
 
+        // Publicar evento de envío de email
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
         // Enviar notificación push al adoptante si tiene un token válido
-        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
+        if (adoptante.getDeviceToken() != null && !adoptante.getDeviceToken().isEmpty()) {
             String pushTitle = subject;
             String pushBody = "Se ha realizado una acción en la salud de tu mascota " + animal.getNombre() +
                     ". Veterinario: " + registroSalud.getVeterinario() +
                     ". Fecha de consulta: " + registroSalud.getFechaConsulta();
-            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
+            notificacionPushService.enviarNotificacion(adoptante, pushTitle, pushBody);
+        } else {
+            logger.warn("No se pudo enviar notificación push a Adoptante ID {}: No hay un token de dispositivo registrado.", adoptante.getId());
         }
     }
 

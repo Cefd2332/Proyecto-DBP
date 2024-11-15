@@ -1,11 +1,10 @@
 package org.e2e.e2e.Animal;
 
+import org.e2e.e2e.Adoptante.Adoptante;
+import org.e2e.e2e.Adoptante.AdoptanteRepository;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
-import org.e2e.e2e.Usuario.Usuario;
-import org.e2e.e2e.Usuario.UsuarioRepository;
-import org.e2e.e2e.exceptions.NotFoundException; // Excepción personalizada
-import org.e2e.e2e.exceptions.ConflictException; // Excepción de conflicto si fuera necesaria
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -16,32 +15,41 @@ import java.util.stream.Collectors;
 public class AnimalService {
 
     private final AnimalRepository animalRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final AdoptanteRepository adoptanteRepository;
     private final RegistroEstadoAnimalRepository registroEstadoAnimalRepository;
     private final NotificacionPushService notificacionPushService;
     private final ApplicationEventPublisher eventPublisher;
 
     // Constructor que inyecta todas las dependencias
     public AnimalService(AnimalRepository animalRepository,
-                         UsuarioRepository usuarioRepository,
+                         AdoptanteRepository adoptanteRepository,
                          RegistroEstadoAnimalRepository registroEstadoAnimalRepository,
                          NotificacionPushService notificacionPushService,
                          ApplicationEventPublisher eventPublisher) {
         this.animalRepository = animalRepository;
-        this.usuarioRepository = usuarioRepository;
+        this.adoptanteRepository = adoptanteRepository;
         this.registroEstadoAnimalRepository = registroEstadoAnimalRepository;
         this.notificacionPushService = notificacionPushService;
         this.eventPublisher = eventPublisher;
     }
 
-    // Obtener todos los animales
+    /**
+     * Obtener todos los animales.
+     *
+     * @return Lista de todos los animales.
+     */
     public List<Animal> obtenerTodosLosAnimales() {
         return animalRepository.findAll();
     }
 
-    // Guardar un nuevo animal
+    /**
+     * Guardar un nuevo animal.
+     *
+     * @param animalDto DTO con la información del animal.
+     * @return Animal guardado.
+     */
     public Animal guardarAnimal(AnimalRequestDto animalDto) {
-        Usuario adoptante = usuarioRepository.findById(animalDto.getAdoptanteId())
+        Adoptante adoptante = adoptanteRepository.findById(animalDto.getAdoptanteId())
                 .orElseThrow(() -> new NotFoundException("Adoptante no encontrado con ID: " + animalDto.getAdoptanteId()));
 
         // Crear un nuevo objeto Animal y establecer sus atributos
@@ -50,6 +58,7 @@ public class AnimalService {
         animal.setEspecie(animalDto.getEspecie());
         animal.setEdad(animalDto.getEdad());
         animal.setEstadoSalud(animalDto.getEstadoSalud());
+        animal.setFechaAdopcion(animalDto.getFechaAdopcion());
         animal.setEstadoActual(EstadoAnimal.SANO);  // Estado inicial del animal
         animal.setAdoptante(adoptante);
 
@@ -61,13 +70,24 @@ public class AnimalService {
         return animalGuardado;
     }
 
-    // Obtener un animal por ID
+    /**
+     * Obtener un animal por su ID.
+     *
+     * @param id ID del animal.
+     * @return Animal encontrado.
+     */
     public Animal obtenerAnimalPorId(Long id) {
         return animalRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Animal no encontrado con ID: " + id));
     }
 
-    // Actualizar la información del animal
+    /**
+     * Actualizar la información de un animal existente.
+     *
+     * @param id        ID del animal a actualizar.
+     * @param animalDto DTO con la nueva información del animal.
+     * @return Animal actualizado.
+     */
     public Animal actualizarAnimal(Long id, AnimalRequestDto animalDto) {
         Animal animal = obtenerAnimalPorId(id);
 
@@ -75,14 +95,15 @@ public class AnimalService {
         animal.setEspecie(animalDto.getEspecie());
         animal.setEdad(animalDto.getEdad());
         animal.setEstadoSalud(animalDto.getEstadoSalud());
+        animal.setFechaAdopcion(animalDto.getFechaAdopcion());
 
-        Usuario adoptante = usuarioRepository.findById(animalDto.getAdoptanteId())
+        Adoptante adoptante = adoptanteRepository.findById(animalDto.getAdoptanteId())
                 .orElseThrow(() -> new NotFoundException("Adoptante no encontrado con ID: " + animalDto.getAdoptanteId()));
         animal.setAdoptante(adoptante);
 
         // Actualizar el estado del animal si se proporciona en el DTO
-        if (animalDto.getEstado() != null) {
-            actualizarEstadoAnimal(animal, animalDto.getEstado());
+        if (animalDto.getEstadoActual() != null) {
+            actualizarEstadoAnimal(animal, animalDto.getEstadoActual());
         }
 
         Animal animalActualizado = animalRepository.save(animal);
@@ -93,24 +114,39 @@ public class AnimalService {
         return animalActualizado;
     }
 
-    // Eliminar un animal
+    /**
+     * Eliminar un animal por su ID.
+     *
+     * @param id ID del animal a eliminar.
+     */
     public void eliminarAnimal(Long id) {
-        Animal animal = animalRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Animal no encontrado con ID: " + id));
+        Animal animal = obtenerAnimalPorId(id);
 
-        animalRepository.deleteById(id);
+        animalRepository.delete(animal);
 
         // Enviar notificación de eliminación
         enviarNotificaciones(animal, "Animal eliminado: " + animal.getNombre());
     }
 
-    // Actualizar el estado del animal y registrar el cambio en el historial
+    /**
+     * Actualizar el estado de salud de un animal y registrar el cambio en el historial.
+     *
+     * @param animalId    ID del animal.
+     * @param nuevoEstado Nuevo estado de salud.
+     * @return Animal con el estado actualizado.
+     */
     public Animal actualizarEstadoAnimal(Long animalId, EstadoAnimal nuevoEstado) {
         Animal animal = obtenerAnimalPorId(animalId);
         return actualizarEstadoAnimal(animal, nuevoEstado);
     }
 
-    // Método privado para actualizar el estado y registrar el cambio
+    /**
+     * Método privado para actualizar el estado y registrar el cambio.
+     *
+     * @param animal      Animal a actualizar.
+     * @param nuevoEstado Nuevo estado de salud.
+     * @return Animal con el estado actualizado.
+     */
     private Animal actualizarEstadoAnimal(Animal animal, EstadoAnimal nuevoEstado) {
         animal.setEstadoActual(nuevoEstado);
 
@@ -128,7 +164,12 @@ public class AnimalService {
         return animalRepository.save(animal);
     }
 
-    // Conversión de Animal a AnimalResponseDto
+    /**
+     * Convertir una entidad Animal a un DTO de respuesta.
+     *
+     * @param animal Animal a convertir.
+     * @return DTO de respuesta.
+     */
     public AnimalResponseDto convertirAnimalAResponseDto(Animal animal) {
         AnimalResponseDto responseDto = new AnimalResponseDto();
         responseDto.setId(animal.getId());
@@ -136,12 +177,17 @@ public class AnimalService {
         responseDto.setEspecie(animal.getEspecie());
         responseDto.setEdad(animal.getEdad());
         responseDto.setEstadoSalud(animal.getEstadoSalud());
-        responseDto.setAdoptanteId(animal.getAdoptante().getId());
         responseDto.setEstadoActual(animal.getEstadoActual());  // Estado actual del animal
+        responseDto.setAdoptanteId(animal.getAdoptante().getId());
         return responseDto;
     }
 
-    // Obtener el historial de cambios de estado del animal
+    /**
+     * Obtener el historial de cambios de estado de un animal.
+     *
+     * @param animalId ID del animal.
+     * @return Lista de registros de cambios de estado.
+     */
     public List<RegistroEstadoAnimalResponseDto> obtenerHistorialEstados(Long animalId) {
         Animal animal = obtenerAnimalPorId(animalId);
         return animal.getRegistroEstadoAnimal().stream()
@@ -149,7 +195,28 @@ public class AnimalService {
                 .collect(Collectors.toList());
     }
 
-    // Conversión de RegistroEstadoAnimal a DTO
+    /**
+     * Obtener todos los animales adoptados por un adoptante específico.
+     *
+     * @param adoptanteId ID del adoptante.
+     * @return Lista de animales adoptados por el adoptante.
+     */
+    public List<Animal> obtenerAnimalesPorAdoptanteId(Long adoptanteId) {
+        // Verificar si el adoptante existe
+        if (!adoptanteRepository.existsById(adoptanteId)) {
+            throw new NotFoundException("Adoptante no encontrado con ID: " + adoptanteId);
+        }
+
+        // Utilizar el método del repositorio para obtener animales por adoptanteId
+        return animalRepository.findByAdoptanteId(adoptanteId);
+    }
+
+    /**
+     * Convertir una entidad RegistroEstadoAnimal a un DTO de respuesta.
+     *
+     * @param registroEstado Registro de cambio de estado.
+     * @return DTO de respuesta.
+     */
     private RegistroEstadoAnimalResponseDto convertirRegistroEstadoAResponseDto(RegistroEstadoAnimal registroEstado) {
         RegistroEstadoAnimalResponseDto responseDto = new RegistroEstadoAnimalResponseDto();
         responseDto.setId(registroEstado.getId());
@@ -159,9 +226,14 @@ public class AnimalService {
         return responseDto;
     }
 
-    // Método auxiliar para enviar correos y notificaciones
+    /**
+     * Método auxiliar para enviar correos electrónicos y notificaciones push.
+     *
+     * @param animal  Animal relacionado con la notificación.
+     * @param subject Asunto de la notificación.
+     */
     private void enviarNotificaciones(Animal animal, String subject) {
-        Usuario adoptante = animal.getAdoptante();
+        Adoptante adoptante = animal.getAdoptante();
 
         // Enviar correo electrónico
         String emailSubject = subject;
@@ -174,13 +246,10 @@ public class AnimalService {
                 "Saludos,\n" +
                 "Equipo de Adopción y Seguimiento de Animales";
 
+        // Publicar evento de envío de email
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        // Enviar notificación push si hay token disponible
-        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-            String pushTitle = subject;
-            String pushBody = "Estado actual de tu mascota " + animal.getNombre() + ": " + animal.getEstadoActual();
-            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
-        }
+        // Enviar notificación push si es necesario
+        notificacionPushService.enviarNotificacion(adoptante, emailSubject, emailBody);
     }
 }

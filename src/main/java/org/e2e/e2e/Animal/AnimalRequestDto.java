@@ -3,7 +3,11 @@ package org.e2e.e2e.Animal;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 
+/**
+ * DTO para recibir solicitudes relacionadas con la entidad Animal.
+ */
 public class AnimalRequestDto {
 
     @NotBlank(message = "El nombre del animal no puede estar vacío")
@@ -18,11 +22,20 @@ public class AnimalRequestDto {
     @NotBlank(message = "El estado de salud no puede estar vacío")
     private String estadoSalud;
 
+    /**
+     * Fecha de adopción del animal.
+     * Este campo es opcional en la creación, pero puede ser útil para actualizaciones.
+     */
+    private LocalDate fechaAdopcion;
+
+    /**
+     * Estado actual del animal.
+     * Este campo es opcional en la creación, ya que el servicio establece el estado inicial.
+     */
+    private EstadoAnimal estadoActual;  // Este campo es opcional, puede omitirse si no es necesario
+
     @NotNull(message = "El adoptante no puede ser nulo")
     private Long adoptanteId;
-
-    // Nuevo campo para controlar el estado actual del animal
-    private EstadoAnimal estado;  // Este campo es opcional, puede omitirse si no es necesario
 
     // Constructores
 
@@ -34,22 +47,24 @@ public class AnimalRequestDto {
     }
 
     /**
-     * Constructor parametrizado.
+     * Constructor parametrizado para facilitar la creación de instancias.
      *
      * @param nombre        Nombre del animal.
      * @param especie       Especie del animal.
      * @param edad          Edad del animal.
      * @param estadoSalud   Estado de salud del animal.
+     * @param fechaAdopcion Fecha de adopción del animal.
+     * @param estadoActual  Estado actual del animal.
      * @param adoptanteId   ID del adoptante.
-     * @param estado        Estado actual del animal.
      */
-    public AnimalRequestDto(String nombre, String especie, int edad, String estadoSalud, Long adoptanteId, EstadoAnimal estado) {
+    public AnimalRequestDto(String nombre, String especie, int edad, String estadoSalud, LocalDate fechaAdopcion, EstadoAnimal estadoActual, Long adoptanteId) {
         this.nombre = nombre;
         this.especie = especie;
         this.edad = edad;
         this.estadoSalud = estadoSalud;
+        this.fechaAdopcion = fechaAdopcion;
+        this.estadoActual = estadoActual;
         this.adoptanteId = adoptanteId;
-        this.estado = estado;
     }
 
     // Getters y Setters
@@ -86,20 +101,28 @@ public class AnimalRequestDto {
         this.estadoSalud = estadoSalud;
     }
 
+    public LocalDate getFechaAdopcion() {
+        return fechaAdopcion;
+    }
+
+    public void setFechaAdopcion(LocalDate fechaAdopcion) {
+        this.fechaAdopcion = fechaAdopcion;
+    }
+
+    public EstadoAnimal getEstadoActual() {
+        return estadoActual;
+    }
+
+    public void setEstadoActual(EstadoAnimal estadoActual) {
+        this.estadoActual = estadoActual;
+    }
+
     public Long getAdoptanteId() {
         return adoptanteId;
     }
 
     public void setAdoptanteId(Long adoptanteId) {
         this.adoptanteId = adoptanteId;
-    }
-
-    public EstadoAnimal getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoAnimal estado) {
-        this.estado = estado;
     }
 
     // Métodos auxiliares (si es necesario)
@@ -111,8 +134,9 @@ public class AnimalRequestDto {
                 ", especie='" + especie + '\'' +
                 ", edad=" + edad +
                 ", estadoSalud='" + estadoSalud + '\'' +
+                ", fechaAdopcion=" + fechaAdopcion +
+                ", estadoActual=" + estadoActual +
                 ", adoptanteId=" + adoptanteId +
-                ", estado=" + estado +
                 '}';
     }
 }

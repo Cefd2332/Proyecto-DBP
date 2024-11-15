@@ -1,7 +1,6 @@
 package org.e2e.e2e.Usuario;
 
 import jakarta.persistence.*;
-import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Notificacion.Notificacion;
 
 import java.util.ArrayList;
@@ -28,11 +27,13 @@ public class Usuario {
 
     private String token;
 
-    @OneToMany(mappedBy = "adoptante", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Animal> animalesAdoptados = new ArrayList<>();
+    // Se elimina la relación con animalesAdoptados
+    // @OneToMany(mappedBy = "adoptante", cascade = CascadeType.ALL, orphanRemoval = true)
+    // private List<Animal> animalesAdoptados = new ArrayList<>();
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notificacion> notificaciones = new ArrayList<>();
+    // Se elimina la relación con notificaciones
+    // @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    // private List<Notificacion> notificaciones = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"))
@@ -54,10 +55,6 @@ public class Usuario {
     // Getters y Setters
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getNombre() {
@@ -100,22 +97,6 @@ public class Usuario {
         this.token = token;
     }
 
-    public List<Animal> getAnimalesAdoptados() {
-        return animalesAdoptados;
-    }
-
-    public void setAnimalesAdoptados(List<Animal> animalesAdoptados) {
-        this.animalesAdoptados = animalesAdoptados;
-    }
-
-    public List<Notificacion> getNotificaciones() {
-        return notificaciones;
-    }
-
-    public void setNotificaciones(List<Notificacion> notificaciones) {
-        this.notificaciones = notificaciones;
-    }
-
     public Set<String> getRoles() {
         return roles;
     }
@@ -124,6 +105,7 @@ public class Usuario {
         this.roles = roles;
     }
 
+    // Método toString
     @Override
     public String toString() {
         return "Usuario{" +

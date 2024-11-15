@@ -17,14 +17,7 @@ public class NotificacionController {
         this.notificacionService = notificacionService;
     }
 
-    @GetMapping("/{usuarioId}")
-    public ResponseEntity<List<NotificacionResponseDto>> obtenerNotificacionesPorUsuario(@PathVariable Long usuarioId) {
-        List<NotificacionResponseDto> notificaciones = notificacionService.obtenerNotificacionesPorUsuario(usuarioId)
-                .stream()
-                .map(notificacionService::convertirNotificacionAResponseDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(notificaciones);
-    }
+
 
     @PostMapping
     public ResponseEntity<NotificacionResponseDto> enviarNotificacion(@RequestBody NotificacionRequestDto notificacionDto) {

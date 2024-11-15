@@ -1,5 +1,6 @@
 package org.e2e.e2e.Vacuna;
 
+import org.e2e.e2e.Adoptante.Adoptante;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
@@ -100,7 +101,7 @@ public class VacunaService {
     // Método auxiliar asíncrono para enviar correos y notificaciones push
     @Async
     protected void enviarNotificacionesAsync(@NotNull Animal animal, Vacuna vacuna, String subject) {
-        Usuario adoptante = animal.getAdoptante();
+        Adoptante adoptante = animal.getAdoptante();
         if (adoptante == null) {
             throw new NotFoundException("Adoptante no encontrado para el animal: " + animal.getNombre());
         }
@@ -115,12 +116,7 @@ public class VacunaService {
 
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-            String pushTitle = subject;
-            String pushBody = "Se ha registrado una acción relacionada con la vacuna de tu mascota " + animal.getNombre() +
-                    ". Vacuna: " + vacuna.getNombre() + ". Fecha de aplicación: " + vacuna.getFechaAplicacion();
-            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
-        }
+
     }
 
     // Convertir vacuna a DTO de respuesta

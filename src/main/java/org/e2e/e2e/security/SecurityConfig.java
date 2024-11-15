@@ -1,6 +1,5 @@
 package org.e2e.e2e.security;
 
-import org.e2e.e2e.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,7 +9,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -22,11 +20,15 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    // Si ya no necesitas el filtro JWT, puedes eliminar esta línea y el método que lo agrega.
+    // private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    // Constructor
+    /*
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
+    */
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -43,30 +45,21 @@ public class SecurityConfig {
         http
                 .cors(withDefaults())  // Habilitar CORS con la configuración definida en CorsConfigurationSource
                 .csrf(csrf -> csrf.disable())  // Deshabilitar CSRF para API
+
                 .authorizeHttpRequests(auth -> auth
-                        // Permitir rutas de autenticación y registro sin autenticación
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        // Permitir todas las rutas de otros endpoints (puedes ajustar según tus necesidades)
-                        .requestMatchers("/api/usuarios/**").permitAll()
-                        .requestMatchers("/api/adopciones/**").permitAll()
-                        .requestMatchers("/api/animales/**").permitAll()
-                        .requestMatchers("/api/citas/**").permitAll()
-                        .requestMatchers("/api/registro-salud/**").permitAll()
-                        .requestMatchers("/api/ubicaciones/**").permitAll()
-                        .requestMatchers("/api/vacunas/**").permitAll()
-                        .requestMatchers("/api/notificaciones/**").permitAll()
-
-                        // Cualquier otra solicitud requiere autenticación
-                        .anyRequest().authenticated()
+                        // Permitir todas las solicitudes sin autenticación
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
-                        // Política de sesiones sin estado (JWT)
+                        // Política de sesiones sin estado (JWT), aunque no se use en esta configuración
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // Añadir filtro JWT antes de UsernamePasswordAuthenticationFilter
+        /*
+        // Si decides mantener el filtro JWT, pero todas las solicitudes son permitidas,
+        // puedes mantener esta línea, aunque el filtro no tendrá efecto práctico.
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        */
 
         return http.build();
     }
@@ -74,7 +67,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Especificar el origen permitido (React frontend)
+        // Especificar los orígenes permitidos (React frontend)
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         // Permitir métodos HTTP específicos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

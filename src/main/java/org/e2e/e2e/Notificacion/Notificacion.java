@@ -1,10 +1,11 @@
 package org.e2e.e2e.Notificacion;
 
 import jakarta.persistence.*;
-import org.e2e.e2e.Usuario.Usuario;
+import org.e2e.e2e.Adoptante.Adoptante;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "notificaciones") // Opcional: Especifica el nombre de la tabla
 public class Notificacion {
 
     @Id
@@ -17,27 +18,36 @@ public class Notificacion {
 
     private boolean enviada = false;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")
-    private Usuario usuario;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "adoptante_id", nullable = false)
+    private Adoptante adoptante; // Cambiado de Usuario a Adoptante
 
     // Constructores
+
+    /**
+     * Constructor por defecto.
+     */
     public Notificacion() {
     }
 
-    public Notificacion(String mensaje, Usuario usuario) {
+    /**
+     * Constructor parametrizado.
+     *
+     * @param mensaje    Mensaje de la notificación.
+     * @param adoptante  Adoptante asociado a la notificación.
+     */
+    public Notificacion(String mensaje, Adoptante adoptante) {
         this.mensaje = mensaje;
-        this.usuario = usuario;
+        this.adoptante = adoptante;
     }
 
     // Getters y Setters
+
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    // No se proporciona setId ya que generalmente el ID es generado automáticamente
 
     public String getMensaje() {
         return mensaje;
@@ -63,13 +73,15 @@ public class Notificacion {
         this.enviada = enviada;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
+    public Adoptante getAdoptante() {
+        return adoptante;
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
+    public void setAdoptante(Adoptante adoptante) {
+        this.adoptante = adoptante;
     }
+
+    // Método toString
 
     @Override
     public String toString() {
@@ -78,7 +90,7 @@ public class Notificacion {
                 ", mensaje='" + mensaje + '\'' +
                 ", fechaEnvio=" + fechaEnvio +
                 ", enviada=" + enviada +
-                ", usuarioId=" + (usuario != null ? usuario.getId() : null) +
+                ", adoptanteId=" + (adoptante != null ? adoptante.getId() : null) +
                 '}';
     }
 }

@@ -109,13 +109,11 @@ public class UsuarioService {
 
         eventPublisher.publishEvent(new EmailEvent(usuario.getEmail(), emailSubject, emailBody));
 
-        // Enviar notificación push si el usuario tiene un token disponible
-        if (usuario.getToken() != null && !usuario.getToken().isEmpty()) {
-            String pushTitle = subject;
-            String pushBody = "Se ha realizado una acción en tu cuenta:\n" +
-                    "Nombre: " + usuario.getNombre() + "\n" +
-                    "Email: " + usuario.getEmail();
-            notificacionPushService.enviarNotificacion(usuario.getToken(), pushTitle, pushBody);
-        }
+
+    }
+
+    public Usuario obtenerUsuarioPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+            .orElseThrow(() -> new NotFoundException("Usuario no encontrado con email: " + email));
     }
 }

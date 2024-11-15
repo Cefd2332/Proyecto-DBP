@@ -1,8 +1,8 @@
 package org.e2e.e2e.Adopcion;
 
 import jakarta.persistence.*;
+import org.e2e.e2e.Adoptante.Adoptante;
 import org.e2e.e2e.Animal.Animal;
-import org.e2e.e2e.Usuario.Usuario;
 
 import java.time.LocalDate;
 
@@ -10,24 +10,27 @@ import java.time.LocalDate;
  * Entidad que representa la adopción de un animal.
  */
 @Entity
+@Table(name = "adopciones")
 public class Adopcion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private LocalDate fechaAdopcion;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")  // Relaciona la adopción con el adoptante
-    private Usuario adoptante;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "adoptante_id", nullable = false)
+    private Adoptante adoptante;
 
-    @OneToOne
-    @JoinColumn(name = "animal_id")  // Relaciona la adopción con el animal
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "animal_id", nullable = false, unique = true)
     private Animal animal;
 
-    @Enumerated(EnumType.STRING)  // Enumera el estado de la adopción
-    private EstadoAdopcion estado;  // Estado de la adopción
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private EstadoAdopcion estado;
 
     // Constructores
 
@@ -42,11 +45,11 @@ public class Adopcion {
      * Constructor parametrizado.
      *
      * @param fechaAdopcion Fecha de la adopción.
-     * @param adoptante     Usuario que adopta el animal.
+     * @param adoptante     Adoptante que realiza la adopción.
      * @param animal        Animal adoptado.
      * @param estado        Estado de la adopción.
      */
-    public Adopcion(LocalDate fechaAdopcion, Usuario adoptante, Animal animal, EstadoAdopcion estado) {
+    public Adopcion(LocalDate fechaAdopcion, Adoptante adoptante, Animal animal, EstadoAdopcion estado) {
         this.fechaAdopcion = fechaAdopcion;
         this.adoptante = adoptante;
         this.animal = animal;
@@ -59,9 +62,7 @@ public class Adopcion {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    // No se proporciona setId ya que generalmente el ID es generado automáticamente
 
     public LocalDate getFechaAdopcion() {
         return fechaAdopcion;
@@ -71,11 +72,11 @@ public class Adopcion {
         this.fechaAdopcion = fechaAdopcion;
     }
 
-    public Usuario getAdoptante() {
+    public Adoptante getAdoptante() {
         return adoptante;
     }
 
-    public void setAdoptante(Usuario adoptante) {
+    public void setAdoptante(Adoptante adoptante) {
         this.adoptante = adoptante;
     }
 

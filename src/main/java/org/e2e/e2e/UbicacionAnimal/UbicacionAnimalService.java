@@ -1,5 +1,6 @@
 package org.e2e.e2e.UbicacionAnimal;
 
+import org.e2e.e2e.Adoptante.Adoptante;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
@@ -76,7 +77,7 @@ public class UbicacionAnimalService {
     // Método asíncrono para enviar correos y notificaciones
     @Async
     public void enviarNotificacionesAsync(Animal animal, UbicacionAnimal ubicacion, String subject) {
-        Usuario adoptante = animal.getAdoptante();
+        Adoptante adoptante = animal.getAdoptante();
 
         String emailSubject = subject;
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
@@ -89,13 +90,7 @@ public class UbicacionAnimalService {
 
         eventPublisher.publishEvent(new EmailEvent(adoptante.getEmail(), emailSubject, emailBody));
 
-        if (adoptante.getToken() != null && !adoptante.getToken().isEmpty()) {
-            String pushTitle = subject;
-            String pushBody = "Se ha registrado una nueva ubicación para tu mascota " + animal.getNombre() +
-                    ". Latitud: " + ubicacion.getLatitud() + ", Longitud: " + ubicacion.getLongitud() +
-                    ". Fecha: " + ubicacion.getFechaHora();
-            notificacionPushService.enviarNotificacion(adoptante.getToken(), pushTitle, pushBody);
-        }
+
     }
 
     // Convertir una entidad UbicacionAnimal a DTO de respuesta

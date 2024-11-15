@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,5 +69,21 @@ public class UsuarioController {
     public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Buscar un usuario por correo electrónico
+    @GetMapping("/buscarPorEmail")
+    public ResponseEntity<UsuarioResponseDto> obtenerUsuarioPorEmail(@RequestParam String email) {
+        Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
+
+        UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
+            usuario.getId(),
+            usuario.getNombre(),
+            usuario.getEmail(),
+            usuario.getDireccion(),
+            new ArrayList<>(usuario.getRoles())
+        );
+
+        return ResponseEntity.ok(usuarioResponse);
     }
 }
