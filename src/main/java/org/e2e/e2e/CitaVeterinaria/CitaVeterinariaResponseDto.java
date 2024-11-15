@@ -8,7 +8,7 @@ public class CitaVeterinariaResponseDto {
     private LocalDateTime fechaCita;
     private String veterinario;
     private String motivo;
-    private Long animalId;
+    private Long animalId; // Asegurarse de que este campo esté presente
     private EstadoCita estado;
 
     // Getters y Setters

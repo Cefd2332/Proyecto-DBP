@@ -57,9 +57,9 @@ public class CitaVeterinariaService {
         CitaVeterinaria cita = new CitaVeterinaria();
         cita.setFechaCita(citaDto.getFechaCita());
         cita.setVeterinario(citaDto.getVeterinario());
-        cita.setMotivo(citaDto.getMotivo()); // Corrección: Establecer el motivo de la cita
+        cita.setMotivo(citaDto.getMotivo()); // Establecer el motivo de la cita
         cita.setEstado(citaDto.getEstado() != null ? citaDto.getEstado() : EstadoCita.PENDIENTE);
-        cita.setAnimal(animal);
+        cita.setAnimal(animal); // Asociar el animal a la cita
 
         CitaVeterinaria citaGuardada = citaVeterinariaRepository.save(cita);
         enviarNotificacionesAsync(citaGuardada, "Nueva cita veterinaria para " + animal.getNombre());
@@ -96,7 +96,7 @@ public class CitaVeterinariaService {
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
                 "Detalles de la cita para su mascota " + animal.getNombre() + ":\n" +
                 "Fecha de la cita: " + cita.getFechaCita() + "\n" +
-                "Motivo: " + cita.getMotivo() + "\n" + // Incluimos el motivo en el email
+                "Motivo: " + cita.getMotivo() + "\n" +
                 "Veterinario: " + cita.getVeterinario() + "\n" +
                 "Estado: " + cita.getEstado() + "\n\n" +
                 "Saludos,\n" +
@@ -109,7 +109,7 @@ public class CitaVeterinariaService {
         if (adoptante.getDeviceToken() != null && !adoptante.getDeviceToken().isEmpty()) {
             String pushTitle = subject;
             String pushBody = "Fecha de la cita: " + cita.getFechaCita() +
-                    ". Motivo: " + cita.getMotivo() + // Incluimos el motivo en la notificación push
+                    ". Motivo: " + cita.getMotivo() +
                     ". Veterinario: " + cita.getVeterinario() + ". Estado: " + cita.getEstado();
             notificacionPushService.enviarNotificacion(adoptante, pushTitle, pushBody);
         } else {
@@ -130,7 +130,7 @@ public class CitaVeterinariaService {
         dto.setMotivo(cita.getMotivo());
         dto.setVeterinario(cita.getVeterinario());
         dto.setEstado(cita.getEstado());
-        // Agrega más campos si es necesario
+        dto.setAnimalId(cita.getAnimal().getId()); // Establecer el animalId en el DTO
         return dto;
     }
 }

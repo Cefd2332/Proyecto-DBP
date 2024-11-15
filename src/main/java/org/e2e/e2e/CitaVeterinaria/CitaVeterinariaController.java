@@ -53,7 +53,8 @@ public class CitaVeterinariaController {
     @PostMapping
     public ResponseEntity<CitaVeterinariaResponseDto> registrarCita(@Valid @RequestBody CitaVeterinariaRequestDto citaDto) {
         CitaVeterinaria cita = citaVeterinariaService.guardarCita(citaDto);
-        return ResponseEntity.ok(citaVeterinariaService.convertirCitaAResponseDto(cita));
+        CitaVeterinariaResponseDto citaResponseDto = citaVeterinariaService.convertirCitaAResponseDto(cita);
+        return ResponseEntity.status(HttpStatus.CREATED).body(citaResponseDto);
     }
 
     // Método para eliminar una cita por ID
