@@ -14,12 +14,34 @@ public class CitaVeterinariaController {
 
     private final CitaVeterinariaService citaVeterinariaService;
 
-    // Constructor manual para la inyección de dependencias
+    // Constructor para la inyección de dependencias
     public CitaVeterinariaController(CitaVeterinariaService citaVeterinariaService) {
         this.citaVeterinariaService = citaVeterinariaService;
     }
 
-    @GetMapping("/{animalId}")
+    // Método para obtener todas las citas
+    @GetMapping
+    public ResponseEntity<List<CitaVeterinariaResponseDto>> obtenerTodasLasCitas() {
+        List<CitaVeterinariaResponseDto> citas = citaVeterinariaService.obtenerTodasLasCitas().stream()
+                .map(citaVeterinariaService::convertirCitaAResponseDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(citas);
+    }
+
+    // Nuevo método para obtener una cita por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<CitaVeterinariaResponseDto> obtenerCitaPorId(@PathVariable Long id) {
+        CitaVeterinaria cita = citaVeterinariaService.obtenerCitaPorId(id);
+        if (cita != null) {
+            CitaVeterinariaResponseDto citaDto = citaVeterinariaService.convertirCitaAResponseDto(cita);
+            return ResponseEntity.ok(citaDto);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    // Método para obtener citas por ID de animal
+    @GetMapping("/animal/{animalId}")
     public ResponseEntity<List<CitaVeterinariaResponseDto>> obtenerCitasPorAnimal(@PathVariable Long animalId) {
         List<CitaVeterinariaResponseDto> citas = citaVeterinariaService.obtenerCitasPorAnimal(animalId).stream()
                 .map(citaVeterinariaService::convertirCitaAResponseDto)
@@ -27,18 +49,21 @@ public class CitaVeterinariaController {
         return ResponseEntity.ok(citas);
     }
 
+    // Método para registrar una nueva cita
     @PostMapping
     public ResponseEntity<CitaVeterinariaResponseDto> registrarCita(@Valid @RequestBody CitaVeterinariaRequestDto citaDto) {
         CitaVeterinaria cita = citaVeterinariaService.guardarCita(citaDto);
         return ResponseEntity.ok(citaVeterinariaService.convertirCitaAResponseDto(cita));
     }
 
+    // Método para eliminar una cita por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCita(@PathVariable Long id) {
         citaVeterinariaService.eliminarCita(id);
         return ResponseEntity.noContent().build();
     }
 
+    // Método para actualizar el estado de una cita
     @PatchMapping("/{id}/estado")
     public ResponseEntity<?> actualizarEstadoCita(@PathVariable Long id, @RequestBody EstadoCita nuevoEstado) {
         try {

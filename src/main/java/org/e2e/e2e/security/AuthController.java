@@ -1,7 +1,7 @@
 package org.e2e.e2e.security;
 
 import org.e2e.e2e.Usuario.*;
-import org.e2e.e2e.security.jwt.JwtTokenUtil;  // Importar la clase para generar el token
+import org.e2e.e2e.security.jwt.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,10 +32,10 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtTokenUtil jwtTokenUtil;  // Inyectar la utilidad para manejar el JWT
+    private JwtTokenUtil jwtTokenUtil;
 
     @PostMapping("/register")
-    @Async  // Hacer asíncrono el registro
+    @Async
     public CompletableFuture<ResponseEntity<UsuarioResponseDto>> registrarUsuario(@Valid @RequestBody UsuarioRequestDto usuarioDto) {
         // Verificar si el usuario ya existe por su email
         if (usuarioRepository.findByEmail(usuarioDto.getEmail()).isPresent()) {
@@ -51,7 +51,7 @@ public class AuthController {
 
         // Asignar el rol USER por defecto
         Set<String> roles = new HashSet<>();
-        roles.add("ROLE_USER");  // Añade el rol por defecto para el usuario registrado
+        roles.add("ROLE_USER");
         usuario.setRoles(roles);
 
         // Guardar el usuario en la base de datos
@@ -65,8 +65,7 @@ public class AuthController {
             String token = jwtTokenUtil.generateToken(userDetails);
 
             // Retornar el usuario y el token en la respuesta
-            UsuarioResponseDto responseDto;
-            responseDto = new UsuarioResponseDto(
+            UsuarioResponseDto responseDto = new UsuarioResponseDto(
                     usuarioGuardado.getId(),
                     usuarioGuardado.getNombre(),
                     usuarioGuardado.getEmail(),
@@ -80,25 +79,25 @@ public class AuthController {
     // Método auxiliar para crear UserDetails a partir del usuario de forma asíncrona
     @Async
     public CompletableFuture<UserDetails> createUserDetailsAsync(Usuario usuario) {
-        return CompletableFuture.completedFuture(new org.springframework.security.core.userdetails.User(
+        return CompletableFuture.completedFuture(new User(
                 usuario.getEmail(),
                 usuario.getPassword(),
-                mapRolesToAuthorities(usuario.getRoles())  // Convertir roles a GrantedAuthority
+                mapRolesToAuthorities(usuario.getRoles())
         ));
     }
 
-    // Método auxiliar para convertir roles de String a GrantedAuthorit
+    // Método auxiliar para convertir roles de String a GrantedAuthority
     private Set<GrantedAuthority> mapRolesToAuthorities(Set<String> roles) {
         return roles.stream()
-                .map(SimpleGrantedAuthority::new)  // Crear una nueva instancia de SimpleGrantedAuthority
+                .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
     }
 
     @PostMapping("/login")
-    @Async  // Hacer asíncrono el login
+    @Async
     public CompletableFuture<ResponseEntity<UsuarioResponseDto>> login(@Valid @RequestBody LoginRequestDto loginDto) {
         return CompletableFuture.supplyAsync(() -> {
-            usuarioRepository.findByEmail(loginDto.getEmail())
+            return (ResponseEntity<UsuarioResponseDto>) usuarioRepository.findByEmail(loginDto.getEmail())
                     .map(usuario -> {
                         if (passwordEncoder.matches(loginDto.getPassword(), usuario.getPassword())) {
                             UserDetails userDetails = new User(
@@ -120,9 +119,6 @@ public class AuthController {
                         }
                     })
                     .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null));
-
-
-            return null;
         });
     }
 }

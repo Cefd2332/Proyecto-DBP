@@ -7,16 +7,13 @@ public class CitaVeterinariaResponseDto {
     private Long id;
     private LocalDateTime fechaCita;
     private String veterinario;
+    private String motivo;
     private Long animalId;
     private EstadoCita estado;
 
     // Getters y Setters
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public LocalDateTime getFechaCita() {
@@ -27,12 +24,24 @@ public class CitaVeterinariaResponseDto {
         this.fechaCita = fechaCita;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getVeterinario() {
         return veterinario;
     }
 
     public void setVeterinario(String veterinario) {
         this.veterinario = veterinario;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
     }
 
     public Long getAnimalId() {
@@ -57,6 +66,7 @@ public class CitaVeterinariaResponseDto {
                 "id=" + id +
                 ", fechaCita=" + fechaCita +
                 ", veterinario='" + veterinario + '\'' +
+                ", motivo='" + motivo + '\'' +
                 ", animalId=" + animalId +
                 ", estado=" + estado +
                 '}';

@@ -22,6 +22,9 @@ public class CitaVeterinaria {
     @NotBlank(message = "El veterinario no puede estar vacío")
     private String veterinario;
 
+    @NotBlank(message = "El motivo no puede estar vacío")
+    private String motivo;
+
     @Enumerated(EnumType.STRING)
     @NotNull(message = "El estado no puede ser nulo")
     private EstadoCita estado;
@@ -34,9 +37,10 @@ public class CitaVeterinaria {
     public CitaVeterinaria() {
     }
 
-    public CitaVeterinaria(LocalDateTime fechaCita, String veterinario, EstadoCita estado, Animal animal) {
+    public CitaVeterinaria(LocalDateTime fechaCita, String veterinario, String motivo, EstadoCita estado, Animal animal) {
         this.fechaCita = fechaCita;
         this.veterinario = veterinario;
+        this.motivo = motivo;
         this.estado = estado;
         this.animal = animal;
     }
@@ -44,10 +48,6 @@ public class CitaVeterinaria {
     // Getters y Setters
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public LocalDateTime getFechaCita() {
@@ -64,6 +64,14 @@ public class CitaVeterinaria {
 
     public void setVeterinario(String veterinario) {
         this.veterinario = veterinario;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
     }
 
     public EstadoCita getEstado() {
@@ -88,6 +96,7 @@ public class CitaVeterinaria {
                 "id=" + id +
                 ", fechaCita=" + fechaCita +
                 ", veterinario='" + veterinario + '\'' +
+                ", motivo='" + motivo + '\'' +
                 ", estado=" + estado +
                 ", animalId=" + (animal != null ? animal.getId() : null) +
                 '}';

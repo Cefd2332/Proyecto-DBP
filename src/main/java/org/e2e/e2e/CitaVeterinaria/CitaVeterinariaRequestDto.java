@@ -14,6 +14,9 @@ public class CitaVeterinariaRequestDto {
     @NotBlank(message = "El veterinario no puede estar vacío")
     private String veterinario;
 
+    @NotBlank(message = "El motivo no puede estar vacío")
+    private String motivo;
+
     @NotNull(message = "El ID del animal no puede ser nulo")
     private Long animalId;
 
@@ -34,6 +37,14 @@ public class CitaVeterinariaRequestDto {
 
     public void setVeterinario(String veterinario) {
         this.veterinario = veterinario;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
     }
 
     public Long getAnimalId() {
@@ -57,6 +68,7 @@ public class CitaVeterinariaRequestDto {
         return "CitaVeterinariaRequestDto{" +
                 "fechaCita=" + fechaCita +
                 ", veterinario='" + veterinario + '\'' +
+                ", motivo='" + motivo + '\'' +
                 ", animalId=" + animalId +
                 ", estado=" + estado +
                 '}';

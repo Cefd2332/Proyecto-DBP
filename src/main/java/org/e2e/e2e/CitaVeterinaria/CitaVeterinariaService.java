@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CitaVeterinariaService {
@@ -25,14 +26,7 @@ public class CitaVeterinariaService {
     private final ApplicationEventPublisher eventPublisher;
     private final NotificacionPushService notificacionPushService;
 
-    /**
-     * Constructor que inyecta todas las dependencias necesarias.
-     *
-     * @param citaVeterinariaRepository Repositorio para manejar citas veterinarias.
-     * @param animalService            Servicio para manejar operaciones relacionadas con animales.
-     * @param eventPublisher           Publicador de eventos para enviar correos electrónicos.
-     * @param notificacionPushService  Servicio para enviar notificaciones push.
-     */
+    // Constructor con inyección de dependencias
     public CitaVeterinariaService(CitaVeterinariaRepository citaVeterinariaRepository,
                                   AnimalService animalService,
                                   ApplicationEventPublisher eventPublisher,
@@ -43,23 +37,16 @@ public class CitaVeterinariaService {
         this.notificacionPushService = notificacionPushService;
     }
 
-    /**
-     * Obtener citas por animal.
-     *
-     * @param animalId ID del animal.
-     * @return Lista de citas veterinarias.
-     */
+    // Método para obtener todas las citas
+    public List<CitaVeterinaria> obtenerTodasLasCitas() {
+        return citaVeterinariaRepository.findAll();
+    }
+
     public List<CitaVeterinaria> obtenerCitasPorAnimal(Long animalId) {
         Animal animal = animalService.obtenerAnimalPorId(animalId);
         return animal.getCitasVeterinarias();
     }
 
-    /**
-     * Guardar una nueva cita veterinaria.
-     *
-     * @param citaDto DTO con los datos de la cita veterinaria.
-     * @return Cita veterinaria guardada.
-     */
     public CitaVeterinaria guardarCita(CitaVeterinariaRequestDto citaDto) {
         Animal animal = animalService.obtenerAnimalPorId(citaDto.getAnimalId());
 
@@ -70,6 +57,7 @@ public class CitaVeterinariaService {
         CitaVeterinaria cita = new CitaVeterinaria();
         cita.setFechaCita(citaDto.getFechaCita());
         cita.setVeterinario(citaDto.getVeterinario());
+        cita.setMotivo(citaDto.getMotivo()); // Corrección: Establecer el motivo de la cita
         cita.setEstado(citaDto.getEstado() != null ? citaDto.getEstado() : EstadoCita.PENDIENTE);
         cita.setAnimal(animal);
 
@@ -79,11 +67,6 @@ public class CitaVeterinariaService {
         return citaGuardada;
     }
 
-    /**
-     * Eliminar una cita veterinaria por su ID.
-     *
-     * @param id ID de la cita veterinaria a eliminar.
-     */
     public void eliminarCita(Long id) {
         CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cita veterinaria no encontrada con ID: " + id));
@@ -93,13 +76,6 @@ public class CitaVeterinariaService {
         enviarNotificacionesAsync(cita, "Cita veterinaria eliminada para " + animal.getNombre());
     }
 
-    /**
-     * Actualizar el estado de una cita veterinaria.
-     *
-     * @param id          ID de la cita veterinaria.
-     * @param nuevoEstado Nuevo estado de la cita.
-     * @return Cita veterinaria actualizada.
-     */
     public CitaVeterinaria actualizarEstadoCita(Long id, EstadoCita nuevoEstado) {
         CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cita veterinaria no encontrada con ID: " + id));
@@ -111,28 +87,6 @@ public class CitaVeterinariaService {
         return citaActualizada;
     }
 
-    /**
-     * Convertir una cita veterinaria a DTO de respuesta.
-     *
-     * @param cita Cita veterinaria a convertir.
-     * @return DTO de respuesta.
-     */
-    public CitaVeterinariaResponseDto convertirCitaAResponseDto(CitaVeterinaria cita) {
-        CitaVeterinariaResponseDto responseDto = new CitaVeterinariaResponseDto();
-        responseDto.setId(cita.getId());
-        responseDto.setFechaCita(cita.getFechaCita());
-        responseDto.setVeterinario(cita.getVeterinario());
-        responseDto.setAnimalId(cita.getAnimal().getId());
-        responseDto.setEstado(cita.getEstado());
-        return responseDto;
-    }
-
-    /**
-     * Método auxiliar para enviar correos y notificaciones de forma asíncrona.
-     *
-     * @param cita    Cita veterinaria asociada.
-     * @param subject Asunto de la notificación.
-     */
     @Async
     public void enviarNotificacionesAsync(CitaVeterinaria cita, String subject) {
         Animal animal = cita.getAnimal();
@@ -142,6 +96,7 @@ public class CitaVeterinariaService {
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
                 "Detalles de la cita para su mascota " + animal.getNombre() + ":\n" +
                 "Fecha de la cita: " + cita.getFechaCita() + "\n" +
+                "Motivo: " + cita.getMotivo() + "\n" + // Incluimos el motivo en el email
                 "Veterinario: " + cita.getVeterinario() + "\n" +
                 "Estado: " + cita.getEstado() + "\n\n" +
                 "Saludos,\n" +
@@ -154,10 +109,28 @@ public class CitaVeterinariaService {
         if (adoptante.getDeviceToken() != null && !adoptante.getDeviceToken().isEmpty()) {
             String pushTitle = subject;
             String pushBody = "Fecha de la cita: " + cita.getFechaCita() +
+                    ". Motivo: " + cita.getMotivo() + // Incluimos el motivo en la notificación push
                     ". Veterinario: " + cita.getVeterinario() + ". Estado: " + cita.getEstado();
             notificacionPushService.enviarNotificacion(adoptante, pushTitle, pushBody);
         } else {
-            logger.warn("No se pudo enviar notificación push a Adoptante ID {}: No hay un token de dispositivo registrado.", adoptante.getId());
+            logger.warn("No se pudo enviar notificación push al Adoptante ID {}: No hay un token de dispositivo registrado.", adoptante.getId());
         }
+    }
+
+    public CitaVeterinaria obtenerCitaPorId(Long id) {
+        Optional<CitaVeterinaria> citaOpt = citaVeterinariaRepository.findById(id);
+        return citaOpt.orElse(null);
+    }
+
+    // Método para convertir una cita a Response DTO
+    public CitaVeterinariaResponseDto convertirCitaAResponseDto(CitaVeterinaria cita) {
+        CitaVeterinariaResponseDto dto = new CitaVeterinariaResponseDto();
+        dto.setId(cita.getId());
+        dto.setFechaCita(cita.getFechaCita());
+        dto.setMotivo(cita.getMotivo());
+        dto.setVeterinario(cita.getVeterinario());
+        dto.setEstado(cita.getEstado());
+        // Agrega más campos si es necesario
+        return dto;
     }
 }
