@@ -1,6 +1,11 @@
+// src/main/java/org/e2e/e2e/CitaVeterinaria/CitaVeterinariaController.java
+
 package org.e2e.e2e.CitaVeterinaria;
 
 import jakarta.validation.Valid;
+import org.e2e.e2e.exceptions.BadRequestException;
+import org.e2e.e2e.exceptions.ConflictException;
+import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,14 +33,14 @@ public class CitaVeterinariaController {
         return ResponseEntity.ok(citas);
     }
 
-    // Nuevo método para obtener una cita por ID
+    // Método para obtener una cita por ID
     @GetMapping("/{id}")
     public ResponseEntity<CitaVeterinariaResponseDto> obtenerCitaPorId(@PathVariable Long id) {
-        CitaVeterinaria cita = citaVeterinariaService.obtenerCitaPorId(id);
-        if (cita != null) {
+        try {
+            CitaVeterinaria cita = citaVeterinariaService.obtenerCitaPorId(id);
             CitaVeterinariaResponseDto citaDto = citaVeterinariaService.convertirCitaAResponseDto(cita);
             return ResponseEntity.ok(citaDto);
-        } else {
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
@@ -52,26 +57,57 @@ public class CitaVeterinariaController {
     // Método para registrar una nueva cita
     @PostMapping
     public ResponseEntity<CitaVeterinariaResponseDto> registrarCita(@Valid @RequestBody CitaVeterinariaRequestDto citaDto) {
-        CitaVeterinaria cita = citaVeterinariaService.guardarCita(citaDto);
-        CitaVeterinariaResponseDto citaResponseDto = citaVeterinariaService.convertirCitaAResponseDto(cita);
-        return ResponseEntity.status(HttpStatus.CREATED).body(citaResponseDto);
+        try {
+            CitaVeterinaria cita = citaVeterinariaService.guardarCita(citaDto);
+            CitaVeterinariaResponseDto citaResponseDto = citaVeterinariaService.convertirCitaAResponseDto(cita);
+            return ResponseEntity.status(HttpStatus.CREATED).body(citaResponseDto);
+        } catch (ConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
     // Método para eliminar una cita por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCita(@PathVariable Long id) {
-        citaVeterinariaService.eliminarCita(id);
-        return ResponseEntity.noContent().build();
+        try {
+            citaVeterinariaService.eliminarCita(id);
+            return ResponseEntity.noContent().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     // Método para actualizar el estado de una cita
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<?> actualizarEstadoCita(@PathVariable Long id, @RequestBody EstadoCita nuevoEstado) {
+    public ResponseEntity<CitaVeterinariaResponseDto> actualizarEstadoCita(@PathVariable Long id, @RequestBody EstadoCita nuevoEstado) {
         try {
             CitaVeterinaria citaActualizada = citaVeterinariaService.actualizarEstadoCita(id, nuevoEstado);
-            return ResponseEntity.ok(citaVeterinariaService.convertirCitaAResponseDto(citaActualizada));
+            CitaVeterinariaResponseDto citaDto = citaVeterinariaService.convertirCitaAResponseDto(citaActualizada);
+            return ResponseEntity.ok(citaDto);
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    // Método para actualizar una cita completa
+    @PutMapping("/{id}")
+    public ResponseEntity<CitaVeterinariaResponseDto> actualizarCita(
+            @PathVariable Long id,
+            @Valid @RequestBody CitaUpdateDto citaUpdateDto) {
+        try {
+            CitaVeterinaria citaActualizada = citaVeterinariaService.actualizarCita(id, citaUpdateDto);
+            CitaVeterinariaResponseDto citaDto = citaVeterinariaService.convertirCitaAResponseDto(citaActualizada);
+            return ResponseEntity.ok(citaDto);
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al actualizar el estado de la cita: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 }

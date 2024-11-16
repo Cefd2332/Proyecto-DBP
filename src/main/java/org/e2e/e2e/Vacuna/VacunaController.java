@@ -18,7 +18,7 @@ public class VacunaController {
         this.vacunaService = vacunaService;
     }
 
-    @GetMapping("/{animalId}")
+    @GetMapping("/animal/{animalId}")
     public ResponseEntity<List<VacunaResponseDto>> obtenerVacunasPorAnimal(@PathVariable Long animalId) {
         List<VacunaResponseDto> vacunas = vacunaService.obtenerVacunasPorAnimal(animalId).stream()
                 .map(vacunaService::convertirVacunaAResponseDto)

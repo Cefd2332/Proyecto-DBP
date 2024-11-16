@@ -1,3 +1,5 @@
+// src/main/java/org/e2e/e2e/CitaVeterinaria/CitaVeterinariaService.java
+
 package org.e2e.e2e.CitaVeterinaria;
 
 import org.e2e.e2e.Adoptante.Adoptante;
@@ -6,6 +8,7 @@ import org.e2e.e2e.Animal.AnimalService;
 import org.e2e.e2e.Email.EmailEvent;
 import org.e2e.e2e.Notificacion.NotificacionPushService;
 import org.e2e.e2e.exceptions.NotFoundException;
+import org.e2e.e2e.exceptions.BadRequestException;
 import org.e2e.e2e.exceptions.ConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +17,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CitaVeterinariaService {
@@ -42,11 +44,19 @@ public class CitaVeterinariaService {
         return citaVeterinariaRepository.findAll();
     }
 
-    public List<CitaVeterinaria> obtenerCitasPorAnimal(Long animalId) {
-        Animal animal = animalService.obtenerAnimalPorId(animalId);
-        return animal.getCitasVeterinarias();
+    // Método para obtener una cita por ID
+    public CitaVeterinaria obtenerCitaPorId(Long id) {
+        return citaVeterinariaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cita veterinaria no encontrada con ID: " + id));
     }
 
+    // Método para obtener citas por ID de animal
+    public List<CitaVeterinaria> obtenerCitasPorAnimal(Long animalId) {
+        Animal animal = animalService.obtenerAnimalPorId(animalId);
+        return citaVeterinariaRepository.findByAnimal(animal);
+    }
+
+    // Método para guardar una nueva cita
     public CitaVeterinaria guardarCita(CitaVeterinariaRequestDto citaDto) {
         Animal animal = animalService.obtenerAnimalPorId(citaDto.getAnimalId());
 
@@ -56,10 +66,10 @@ public class CitaVeterinariaService {
 
         CitaVeterinaria cita = new CitaVeterinaria();
         cita.setFechaCita(citaDto.getFechaCita());
+        cita.setMotivo(citaDto.getMotivo());
         cita.setVeterinario(citaDto.getVeterinario());
-        cita.setMotivo(citaDto.getMotivo()); // Establecer el motivo de la cita
         cita.setEstado(citaDto.getEstado() != null ? citaDto.getEstado() : EstadoCita.PENDIENTE);
-        cita.setAnimal(animal); // Asociar el animal a la cita
+        cita.setAnimal(animal);
 
         CitaVeterinaria citaGuardada = citaVeterinariaRepository.save(cita);
         enviarNotificacionesAsync(citaGuardada, "Nueva cita veterinaria para " + animal.getNombre());
@@ -67,6 +77,7 @@ public class CitaVeterinariaService {
         return citaGuardada;
     }
 
+    // Método para eliminar una cita
     public void eliminarCita(Long id) {
         CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cita veterinaria no encontrada con ID: " + id));
@@ -76,17 +87,43 @@ public class CitaVeterinariaService {
         enviarNotificacionesAsync(cita, "Cita veterinaria eliminada para " + animal.getNombre());
     }
 
+    // Método para actualizar el estado de una cita
     public CitaVeterinaria actualizarEstadoCita(Long id, EstadoCita nuevoEstado) {
         CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cita veterinaria no encontrada con ID: " + id));
 
         cita.setEstado(nuevoEstado);
         CitaVeterinaria citaActualizada = citaVeterinariaRepository.save(cita);
-        enviarNotificacionesAsync(citaActualizada, "Estado de cita actualizado para " + cita.getAnimal().getNombre());
+        enviarNotificacionesAsync(citaActualizada, "Estado de cita actualizado para " + citaActualizada.getAnimal().getNombre());
 
         return citaActualizada;
     }
 
+    // Método para actualizar una cita completa
+    public CitaVeterinaria actualizarCita(Long id, CitaUpdateDto citaUpdateDto) {
+        CitaVeterinaria cita = citaVeterinariaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cita veterinaria no encontrada con ID: " + id));
+
+        // Actualizar los campos de la cita
+        cita.setFechaCita(citaUpdateDto.getFechaCita());
+        cita.setMotivo(citaUpdateDto.getMotivo());
+        cita.setVeterinario(citaUpdateDto.getVeterinario());
+
+        // Validar y actualizar el estado
+        try {
+            EstadoCita estadoActualizado = EstadoCita.valueOf(citaUpdateDto.getEstado());
+            cita.setEstado(estadoActualizado);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Estado de cita inválido: " + citaUpdateDto.getEstado());
+        }
+
+        CitaVeterinaria citaActualizada = citaVeterinariaRepository.save(cita);
+        enviarNotificacionesAsync(citaActualizada, "Cita actualizada para " + citaActualizada.getAnimal().getNombre());
+
+        return citaActualizada;
+    }
+
+    // Método para enviar notificaciones de manera asíncrona
     @Async
     public void enviarNotificacionesAsync(CitaVeterinaria cita, String subject) {
         Animal animal = cita.getAnimal();
@@ -117,11 +154,6 @@ public class CitaVeterinariaService {
         }
     }
 
-    public CitaVeterinaria obtenerCitaPorId(Long id) {
-        Optional<CitaVeterinaria> citaOpt = citaVeterinariaRepository.findById(id);
-        return citaOpt.orElse(null);
-    }
-
     // Método para convertir una cita a Response DTO
     public CitaVeterinariaResponseDto convertirCitaAResponseDto(CitaVeterinaria cita) {
         CitaVeterinariaResponseDto dto = new CitaVeterinariaResponseDto();
@@ -130,7 +162,7 @@ public class CitaVeterinariaService {
         dto.setMotivo(cita.getMotivo());
         dto.setVeterinario(cita.getVeterinario());
         dto.setEstado(cita.getEstado());
-        dto.setAnimalId(cita.getAnimal().getId()); // Establecer el animalId en el DTO
+        dto.setAnimalId(cita.getAnimal().getId());
         return dto;
     }
 }

@@ -8,12 +8,30 @@ public class CitaVeterinariaResponseDto {
     private LocalDateTime fechaCita;
     private String veterinario;
     private String motivo;
-    private Long animalId; // Asegurarse de que este campo esté presente
+    private Long animalId;
     private EstadoCita estado;
+
+    // Constructor por defecto
+    public CitaVeterinariaResponseDto() {
+    }
+
+    // Constructor con todos los campos
+    public CitaVeterinariaResponseDto(Long id, LocalDateTime fechaCita, String veterinario, String motivo, Long animalId, EstadoCita estado) {
+        this.id = id;
+        this.fechaCita = fechaCita;
+        this.veterinario = veterinario;
+        this.motivo = motivo;
+        this.animalId = animalId;
+        this.estado = estado;
+    }
 
     // Getters y Setters
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public LocalDateTime getFechaCita() {
@@ -22,10 +40,6 @@ public class CitaVeterinariaResponseDto {
 
     public void setFechaCita(LocalDateTime fechaCita) {
         this.fechaCita = fechaCita;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getVeterinario() {
