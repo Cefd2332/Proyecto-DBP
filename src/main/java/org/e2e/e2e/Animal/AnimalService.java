@@ -57,6 +57,7 @@ public class AnimalService {
         animal.setNombre(animalDto.getNombre());
         animal.setEspecie(animalDto.getEspecie());
         animal.setEdad(animalDto.getEdad());
+        animal.setUnidadEdad(animalDto.getUnidadEdad()); // Nuevo campo
         animal.setEstadoSalud(animalDto.getEstadoSalud());
         animal.setFechaAdopcion(animalDto.getFechaAdopcion());
         animal.setEstadoActual(EstadoAnimal.SANO);  // Estado inicial del animal
@@ -94,6 +95,7 @@ public class AnimalService {
         animal.setNombre(animalDto.getNombre());
         animal.setEspecie(animalDto.getEspecie());
         animal.setEdad(animalDto.getEdad());
+        animal.setUnidadEdad(animalDto.getUnidadEdad()); // Nuevo campo
         animal.setEstadoSalud(animalDto.getEstadoSalud());
         animal.setFechaAdopcion(animalDto.getFechaAdopcion());
 
@@ -176,6 +178,7 @@ public class AnimalService {
         responseDto.setNombre(animal.getNombre());
         responseDto.setEspecie(animal.getEspecie());
         responseDto.setEdad(animal.getEdad());
+        responseDto.setUnidadEdad(animal.getUnidadEdad());
         responseDto.setEstadoSalud(animal.getEstadoSalud());
         responseDto.setEstadoActual(animal.getEstadoActual());  // Estado actual del animal
         responseDto.setAdoptanteId(animal.getAdoptante().getId());
@@ -240,7 +243,7 @@ public class AnimalService {
         String emailBody = "Estimado " + adoptante.getNombre() + ",\n\n" +
                 "Detalles del animal " + animal.getNombre() + ":\n" +
                 "Especie: " + animal.getEspecie() + "\n" +
-                "Edad: " + animal.getEdad() + "\n" +
+                "Edad: " + animal.getEdad() + " " + animal.getUnidadEdad() + "\n" +
                 "Estado de salud: " + animal.getEstadoSalud() + "\n" +
                 "Estado actual: " + animal.getEstadoActual() + "\n\n" +
                 "Saludos,\n" +

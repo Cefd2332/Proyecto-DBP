@@ -19,6 +19,9 @@ public class AnimalRequestDto {
     @Min(value = 0, message = "La edad debe ser un valor positivo")
     private int edad;
 
+    @NotBlank(message = "La unidad de edad no puede estar vacía")
+    private String unidadEdad;
+
     @NotBlank(message = "El estado de salud no puede estar vacío")
     private String estadoSalud;
 
@@ -57,10 +60,11 @@ public class AnimalRequestDto {
      * @param estadoActual  Estado actual del animal.
      * @param adoptanteId   ID del adoptante.
      */
-    public AnimalRequestDto(String nombre, String especie, int edad, String estadoSalud, LocalDate fechaAdopcion, EstadoAnimal estadoActual, Long adoptanteId) {
+    public AnimalRequestDto(String nombre, String especie, int edad, String unidadEdad, String estadoSalud, LocalDate fechaAdopcion, EstadoAnimal estadoActual, Long adoptanteId) {
         this.nombre = nombre;
         this.especie = especie;
         this.edad = edad;
+        this.unidadEdad = unidadEdad;
         this.estadoSalud = estadoSalud;
         this.fechaAdopcion = fechaAdopcion;
         this.estadoActual = estadoActual;
@@ -91,6 +95,14 @@ public class AnimalRequestDto {
 
     public void setEdad(int edad) {
         this.edad = edad;
+    }
+
+    public String getUnidadEdad() {
+        return unidadEdad;
+    }
+
+    public void setUnidadEdad(String unidadEdad) {
+        this.unidadEdad = unidadEdad;
     }
 
     public String getEstadoSalud() {

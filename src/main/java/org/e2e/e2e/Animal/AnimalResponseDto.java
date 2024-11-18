@@ -6,6 +6,7 @@ public class AnimalResponseDto {
     private String nombre;
     private String especie;
     private int edad;
+    private String unidadEdad; // Nuevo campo
     private String estadoSalud;
     private Long adoptanteId;
     private EstadoAnimal estadoActual;  // Estado actual del animal
@@ -30,11 +31,12 @@ public class AnimalResponseDto {
      * @param adoptanteId   ID del adoptante.
      * @param estadoActual  Estado actual del animal.
      */
-    public AnimalResponseDto(Long id, String nombre, String especie, int edad, String estadoSalud, Long adoptanteId, EstadoAnimal estadoActual) {
+    public AnimalResponseDto(Long id, String nombre, String especie, int edad, String unidadEdad, String estadoSalud, Long adoptanteId, EstadoAnimal estadoActual) {
         this.id = id;
         this.nombre = nombre;
         this.especie = especie;
         this.edad = edad;
+        this.unidadEdad = unidadEdad;
         this.estadoSalud = estadoSalud;
         this.adoptanteId = adoptanteId;
         this.estadoActual = estadoActual;
@@ -112,6 +114,16 @@ public class AnimalResponseDto {
      */
     public void setEdad(int edad) {
         this.edad = edad;
+    }
+
+    /* Sirve para saber la unidad de la edad (meses, años) */
+
+    public String getUnidadEdad() {
+        return unidadEdad;
+    }
+
+    public void setUnidadEdad(String unidadEdad) {
+        this.unidadEdad = unidadEdad;
     }
 
     /**

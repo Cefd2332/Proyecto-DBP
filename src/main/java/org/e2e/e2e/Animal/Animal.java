@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "animales") // Especifica el nombre de la tabla en la base de datos
+@Table(name = "animales")
 public class Animal {
 
     @Id
@@ -28,6 +28,9 @@ public class Animal {
     @Column(nullable = false)
     private int edad;
 
+    @Column(nullable = false, length = 10)
+    private String unidadEdad; // Nuevo campo para la unidad de edad
+
     @Column(nullable = false, length = 100)
     private String estadoSalud;
 
@@ -36,11 +39,11 @@ public class Animal {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstadoAnimal estadoActual;  // Estado actual del animal
+    private EstadoAnimal estadoActual;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "adoptante_id", nullable = false)
-    private Adoptante adoptante; // Cambiado de Usuario a Adoptante
+    private Adoptante adoptante;
 
     @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RegistroEstadoAnimal> registroEstadoAnimal = new ArrayList<>();
@@ -63,10 +66,11 @@ public class Animal {
         // Constructor por defecto
     }
 
-    public Animal(String nombre, String especie, int edad, String estadoSalud, LocalDate fechaAdopcion, EstadoAnimal estadoActual, Adoptante adoptante) {
+    public Animal(String nombre, String especie, int edad, String unidadEdad, String estadoSalud, LocalDate fechaAdopcion, EstadoAnimal estadoActual, Adoptante adoptante) {
         this.nombre = nombre;
         this.especie = especie;
         this.edad = edad;
+        this.unidadEdad = unidadEdad; // Asignar la unidad de edad
         this.estadoSalud = estadoSalud;
         this.fechaAdopcion = fechaAdopcion;
         this.estadoActual = estadoActual;
@@ -78,8 +82,6 @@ public class Animal {
     public Long getId() {
         return id;
     }
-
-    // No se proporciona setId ya que generalmente el ID es generado automáticamente
 
     public String getNombre() {
         return nombre;
@@ -103,6 +105,14 @@ public class Animal {
 
     public void setEdad(int edad) {
         this.edad = edad;
+    }
+
+    public String getUnidadEdad() {
+        return unidadEdad;
+    }
+
+    public void setUnidadEdad(String unidadEdad) {
+        this.unidadEdad = unidadEdad;
     }
 
     public String getEstadoSalud() {
