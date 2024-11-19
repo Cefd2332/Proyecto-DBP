@@ -6,7 +6,6 @@ import org.e2e.e2e.Animal.AnimalResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,11 +36,16 @@ public class UsuarioController {
         return ResponseEntity.ok(usuariosResponse);
     }
 
+    // Obtener perfil del usuario actual
     @GetMapping("/perfil")
-    public ResponseEntity<UsuarioResponseDto> obtenerPerfilUsuario() {
-        // Obtener el correo del usuario actual (por ejemplo, desde el token JWT)
-        String emailUsuarioActual = "" /* método para obtener el email del token JWT */;
+    public ResponseEntity<UsuarioResponseDto> obtenerPerfilUsuario(@RequestHeader("Authorization") String authorizationHeader) {
+        // Extraer el token JWT del encabezado Authorization
+        String token = authorizationHeader.replace("Bearer ", "");
 
+        // Obtener el email del usuario actual desde el token JWT
+        String emailUsuarioActual = usuarioService.obtenerEmailDesdeToken(token);
+
+        // Obtener el usuario por email
         Usuario usuario = usuarioService.obtenerUsuarioPorEmail(emailUsuarioActual);
 
         UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
@@ -80,11 +84,22 @@ public class UsuarioController {
 
     // Cambiar contraseña
     @PutMapping("/perfil/cambiar-contrasena")
-    public ResponseEntity<String> cambiarContrasena(@RequestBody CambiarContrasenaRequest cambiarContrasenaRequest) {
+    public ResponseEntity<String> cambiarContrasena(@RequestBody CambiarContrasenaRequest cambiarContrasenaRequest, @RequestHeader("Authorization") String authorizationHeader) {
+        // Extraer el token JWT del encabezado Authorization
+        String token = authorizationHeader.replace("Bearer ", "");
+
+        // Obtener el email del usuario actual desde el token JWT
+        String emailUsuarioActual = usuarioService.obtenerEmailDesdeToken(token);
+
+        // Obtener el usuario por email
+        Usuario usuario = usuarioService.obtenerUsuarioPorEmail(emailUsuarioActual);
+
+        // Asignar el userId al request de cambio de contraseña
+        cambiarContrasenaRequest.setUsuarioId(usuario.getId());
+
         usuarioService.cambiarContrasena(cambiarContrasenaRequest);
         return ResponseEntity.ok("Contraseña actualizada correctamente.");
     }
-
 
     // Obtener historial de adoptantes
     @GetMapping("/historial/adoptantes")
@@ -127,13 +142,20 @@ public class UsuarioController {
         Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
 
         UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
-            usuario.getId(),
-            usuario.getNombre(),
-            usuario.getEmail(),
-            usuario.getDireccion(),
-            new ArrayList<>(usuario.getRoles())
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getEmail(),
+                usuario.getDireccion(),
+                new ArrayList<>(usuario.getRoles())
         );
 
         return ResponseEntity.ok(usuarioResponse);
+    }
+
+    // **Nuevo Endpoint para Autenticación por Nombre, Email y Contraseña**
+    @PostMapping("/autenticar")
+    public ResponseEntity<AutenticacionResponseDto> autenticarUsuario(@Valid @RequestBody AutenticacionRequestDto autenticacionRequest) {
+        AutenticacionResponseDto response = usuarioService.autenticarYObtenerId(autenticacionRequest);
+        return ResponseEntity.ok(response);
     }
 }
