@@ -3,12 +3,22 @@ package org.e2e.e2e.Adoptante;
 import jakarta.persistence.*;
 import org.e2e.e2e.Animal.Animal;
 import org.e2e.e2e.Notificacion.Notificacion;
+import org.e2e.e2e.Usuario.Usuario;
 
 import java.util.*;
 
 @Entity
 @Table(name = "adoptantes")
 public class Adoptante {
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id") // Asegúrate de que el nombre de la columna coincida con tu base de datos
+    private Usuario usuario;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado")
+    private EstadoAdoptante estado;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

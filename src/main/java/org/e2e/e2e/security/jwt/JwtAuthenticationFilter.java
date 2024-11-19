@@ -23,6 +23,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtTokenUtil = jwtTokenUtil;
         this.customUserDetailsService = customUserDetailsService;
     }
+    public String obtenerEmailDelToken() {
+        // Obtén el principal del SecurityContext (generalmente el email o nombre de usuario)
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)

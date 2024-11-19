@@ -1,8 +1,11 @@
 package org.e2e.e2e.Usuario;
 
 import jakarta.validation.Valid;
+import org.e2e.e2e.Adoptante.AdoptanteResponseDto;
+import org.e2e.e2e.Animal.AnimalResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +37,24 @@ public class UsuarioController {
         return ResponseEntity.ok(usuariosResponse);
     }
 
+    @GetMapping("/perfil")
+    public ResponseEntity<UsuarioResponseDto> obtenerPerfilUsuario() {
+        // Obtener el correo del usuario actual (por ejemplo, desde el token JWT)
+        String emailUsuarioActual = "" /* método para obtener el email del token JWT */;
+
+        Usuario usuario = usuarioService.obtenerUsuarioPorEmail(emailUsuarioActual);
+
+        UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getEmail(),
+                usuario.getDireccion(),
+                new ArrayList<>(usuario.getRoles()) // Trabaja directamente con los roles como cadenas
+        );
+
+        return ResponseEntity.ok(usuarioResponse);
+    }
+
     // Obtener un usuario por ID
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDto> obtenerUsuarioPorId(@PathVariable Long id) {
@@ -48,6 +69,35 @@ public class UsuarioController {
         );
 
         return ResponseEntity.ok(usuarioResponse);
+    }
+
+    // Actualizar perfil del usuario
+    @PutMapping("/perfil")
+    public ResponseEntity<String> actualizarPerfil(@RequestBody UsuarioRequestDto usuarioDto) {
+        usuarioService.actualizarPerfil(usuarioDto);
+        return ResponseEntity.ok("Perfil actualizado correctamente.");
+    }
+
+    // Cambiar contraseña
+    @PutMapping("/perfil/cambiar-contrasena")
+    public ResponseEntity<String> cambiarContrasena(@RequestBody CambiarContrasenaRequest cambiarContrasenaRequest) {
+        usuarioService.cambiarContrasena(cambiarContrasenaRequest);
+        return ResponseEntity.ok("Contraseña actualizada correctamente.");
+    }
+
+
+    // Obtener historial de adoptantes
+    @GetMapping("/historial/adoptantes")
+    public ResponseEntity<List<AdoptanteResponseDto>> obtenerHistorialAdoptantes() {
+        List<AdoptanteResponseDto> historial = usuarioService.obtenerHistorialAdoptantes();
+        return ResponseEntity.ok(historial);
+    }
+
+    // Obtener historial de animales
+    @GetMapping("/historial/animales")
+    public ResponseEntity<List<AnimalResponseDto>> obtenerHistorialAnimales() {
+        List<AnimalResponseDto> historial = usuarioService.obtenerHistorialAnimales();
+        return ResponseEntity.ok(historial);
     }
 
     // Registrar un nuevo usuario

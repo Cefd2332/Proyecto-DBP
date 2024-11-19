@@ -4,11 +4,19 @@ import org.e2e.e2e.exceptions.NotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface AdoptanteRepository extends JpaRepository<Adoptante, Long> {
+
+    @Query("SELECT a FROM Adoptante a WHERE a.usuario.id = :usuarioId")
+    List<Adoptante> findByUsuarioId(@Param("usuarioId") Long usuarioId);
+
+    @Query("SELECT a FROM Adoptante a WHERE a.estado = 'ELIMINADO'")
+    List<Adoptante> findAdoptantesEliminados();
 
     /**
      * Encuentra un Adoptante por su dirección de correo electrónico.
@@ -48,3 +56,5 @@ public interface AdoptanteRepository extends JpaRepository<Adoptante, Long> {
     @Query("SELECT a FROM Adoptante a WHERE a.nombre LIKE %:nombre%")
     List<Adoptante> buscarPorNombre(@Param("nombre") String nombre);
 }
+
+

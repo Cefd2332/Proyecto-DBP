@@ -15,6 +15,15 @@ import java.util.List;
 @Table(name = "animales")
 public class Animal {
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado")
+    private EstadoAnimal estado;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_registro")
+    private EstadoRegistro estadoRegistro;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

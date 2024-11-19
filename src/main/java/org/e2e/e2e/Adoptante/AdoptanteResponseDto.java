@@ -12,6 +12,13 @@ public class AdoptanteResponseDto {
     private List<String> roles;
     private String deviceToken; // Nuevo campo añadido
 
+    // Constructor para funcion Perfil
+    public AdoptanteResponseDto(Long id, String nombre, String email) {
+        this.id = id;
+        this.nombre = nombre;
+        this.email = email;
+    }
+
     // Constructor actualizado
     public AdoptanteResponseDto(Long id, String nombre, String email, String direccion, String telefono, List<String> roles, String deviceToken) {
         this.id = id;

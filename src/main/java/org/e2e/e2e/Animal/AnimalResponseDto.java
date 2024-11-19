@@ -11,6 +11,14 @@ public class AnimalResponseDto {
     private Long adoptanteId;
     private EstadoAnimal estadoActual;  // Estado actual del animal
 
+    // Constructor para funcion Perfil
+    public AnimalResponseDto(Long id, String nombre, String especie, String estadoSalud) {
+        this.id = id;
+        this.nombre = nombre;
+        this.especie = especie;
+        this.estadoSalud = estadoSalud;
+    }
+
     // Constructores
 
     /**
