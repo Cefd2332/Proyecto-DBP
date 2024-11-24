@@ -1,5 +1,6 @@
 package org.e2e.e2e.Usuario;
 
+import io.jsonwebtoken.io.IOException;
 import jakarta.validation.Valid;
 import org.e2e.e2e.Adoptante.Adoptante;
 import org.e2e.e2e.Adoptante.AdoptanteRepository;
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.security.Key;
 
 @Service
@@ -36,6 +39,8 @@ public class UsuarioService {
     private final AnimalRepository animalRepository;
     private final PasswordEncoder passwordEncoder;
     private final Key jwtSecretKey;
+    private final AlmacenamientoService almacenamientoService; // Servicio para manejar archivos
+
 
     // Constructor manual para inyectar dependencias
     public UsuarioService(UsuarioRepository usuarioRepository,
@@ -43,13 +48,14 @@ public class UsuarioService {
                           NotificacionPushService notificacionPushService,
                           AdoptanteRepository adoptanteRepository,
                           AnimalRepository animalRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder, AlmacenamientoService almacenamientoService) {
         this.usuarioRepository = usuarioRepository;
         this.eventPublisher = eventPublisher;
         this.notificacionPushService = notificacionPushService;
         this.adoptanteRepository = adoptanteRepository;
         this.animalRepository = animalRepository;
         this.passwordEncoder = passwordEncoder;
+        this.almacenamientoService = almacenamientoService;
         // Inicializar la clave secreta para JWT (debe ser segura y almacenada de manera segura)
         this.jwtSecretKey = Keys.hmacShaKeyFor("TuClaveSecretaMuySeguraParaJWT1234567890".getBytes(StandardCharsets.UTF_8));
     }
@@ -105,24 +111,42 @@ public class UsuarioService {
         return new AutenticacionResponseDto(usuario.getId());
     }
 
-    // Actualizar perfil del usuario
-    public void actualizarPerfil(UsuarioRequestDto usuarioDto) {
-        // Buscar al usuario por email
-        Usuario usuario = usuarioRepository.findByEmail(usuarioDto.getEmail())
+    @Transactional
+    public void actualizarPerfil(String emailUsuarioActual, String nombre, String email, String direccion, MultipartFile fotoPerfil) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuarioActual)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado."));
 
-        // Actualizar campos si no son nulos o vacíos
-        if (usuarioDto.getNombre() != null && !usuarioDto.getNombre().isEmpty()) {
-            usuario.setNombre(usuarioDto.getNombre());
+        // Actualizar nombre
+        if (nombre != null && !nombre.isEmpty()) {
+            usuario.setNombre(nombre);
         }
 
-        if (usuarioDto.getDireccion() != null && !usuarioDto.getDireccion().isEmpty()) {
-            usuario.setDireccion(usuarioDto.getDireccion());
+        // Actualizar correo electrónico
+        if (email != null && !email.isEmpty() && !usuario.getEmail().equalsIgnoreCase(email)) {
+            // Verificar si el nuevo email ya está en uso
+            if (usuarioRepository.findByEmail(email).isPresent()) {
+                throw new BadRequestException("El correo electrónico ya está en uso.");
+            }
+            usuario.setEmail(email);
         }
 
-        // Guardar los cambios
+        // Actualizar dirección
+        if (direccion != null && !direccion.isEmpty()) {
+            usuario.setDireccion(direccion);
+        }
+
+        // Manejar la imagen de perfil
+        if (fotoPerfil != null && !fotoPerfil.isEmpty()) {
+            try {
+                usuario.setFotoPerfil(fotoPerfil.getBytes());
+            } catch (IOException | java.io.IOException e) {
+                throw new RuntimeException("Error al leer el archivo de imagen", e);
+            }
+        }
+
         usuarioRepository.save(usuario);
     }
+
 
     // Cambiar contraseña
     @Transactional
@@ -194,7 +218,7 @@ public class UsuarioService {
     public String obtenerEmailDesdeToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey("TuClaveSecretaMuySeguraParaJWT1234567890".getBytes(StandardCharsets.UTF_8))
+                    .setSigningKey(jwtSecretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();

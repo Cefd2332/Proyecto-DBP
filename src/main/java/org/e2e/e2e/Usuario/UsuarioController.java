@@ -5,6 +5,7 @@ import org.e2e.e2e.Adoptante.AdoptanteResponseDto;
 import org.e2e.e2e.Animal.AnimalResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,13 +40,9 @@ public class UsuarioController {
     // Obtener perfil del usuario actual
     @GetMapping("/perfil")
     public ResponseEntity<UsuarioResponseDto> obtenerPerfilUsuario(@RequestHeader("Authorization") String authorizationHeader) {
-        // Extraer el token JWT del encabezado Authorization
         String token = authorizationHeader.replace("Bearer ", "");
-
-        // Obtener el email del usuario actual desde el token JWT
         String emailUsuarioActual = usuarioService.obtenerEmailDesdeToken(token);
 
-        // Obtener el usuario por email
         Usuario usuario = usuarioService.obtenerUsuarioPorEmail(emailUsuarioActual);
 
         UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
@@ -53,7 +50,7 @@ public class UsuarioController {
                 usuario.getNombre(),
                 usuario.getEmail(),
                 usuario.getDireccion(),
-                new ArrayList<>(usuario.getRoles()) // Trabaja directamente con los roles como cadenas
+                new ArrayList<>(usuario.getRoles())
         );
 
         return ResponseEntity.ok(usuarioResponse);
@@ -75,12 +72,32 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioResponse);
     }
 
-    // Actualizar perfil del usuario
-    @PutMapping("/perfil")
-    public ResponseEntity<String> actualizarPerfil(@RequestBody UsuarioRequestDto usuarioDto) {
-        usuarioService.actualizarPerfil(usuarioDto);
+    // Actualizar perfil del usuario con manejo de imágenes
+    @PutMapping(value = "/perfil", consumes = {"multipart/form-data"})
+    public ResponseEntity<String> actualizarPerfil(
+            @RequestParam("nombre") String nombre,
+            @RequestParam("email") String email,
+            @RequestParam("direccion") String direccion,
+            @RequestParam(value = "fotoPerfil", required = false) MultipartFile fotoPerfil,
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        System.out.println("Nombre recibido: " + nombre);
+        System.out.println("Email recibido: " + email);
+        System.out.println("Direccion recibida: " + direccion);
+        System.out.println("FotoPerfil recibida: " + (fotoPerfil != null ? fotoPerfil.getOriginalFilename() : "Sin foto"));
+
+        // Extraer email desde el token
+        String token = authorizationHeader.replace("Bearer ", "");
+        String emailUsuarioActual = usuarioService.obtenerEmailDesdeToken(token);
+
+        // Logs para depuración
+        System.out.println("Email actual: " + emailUsuarioActual);
+        System.out.println("Email nuevo: " + email);
+
+        usuarioService.actualizarPerfil(emailUsuarioActual, nombre, email, direccion, fotoPerfil);
         return ResponseEntity.ok("Perfil actualizado correctamente.");
     }
+
 
     // Cambiar contraseña
     @PutMapping("/perfil/cambiar-contrasena")

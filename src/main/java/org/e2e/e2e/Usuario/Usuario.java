@@ -27,6 +27,10 @@ public class Usuario {
 
     private String token;
 
+    @Lob
+    private byte[] fotoPerfil;
+
+
     // Se elimina la relación con animalesAdoptados
     // @OneToMany(mappedBy = "adoptante", cascade = CascadeType.ALL, orphanRemoval = true)
     // private List<Animal> animalesAdoptados = new ArrayList<>();
@@ -103,6 +107,14 @@ public class Usuario {
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;
+    }
+
+    public byte[] getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(byte[] fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
     }
 
     // Método toString
