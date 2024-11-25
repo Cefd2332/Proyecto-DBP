@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+
 /**
  * DTO para recibir solicitudes relacionadas con la entidad Animal.
  */
@@ -42,7 +43,6 @@ public class AnimalRequestDto {
     @NotNull(message = "El género no puede estar vacío")
     private GeneroAnimal genero;
 
-
     // Constructores
 
     /**
@@ -58,10 +58,12 @@ public class AnimalRequestDto {
      * @param nombre        Nombre del animal.
      * @param especie       Especie del animal.
      * @param edad          Edad del animal.
+     * @param unidadEdad    Unidad de la edad del animal (años/meses).
      * @param estadoSalud   Estado de salud del animal.
      * @param fechaAdopcion Fecha de adopción del animal.
      * @param estadoActual  Estado actual del animal.
      * @param adoptanteId   ID del adoptante.
+     * @param genero        Género del animal.
      */
     public AnimalRequestDto(String nombre, String especie, int edad, String unidadEdad, String estadoSalud,
                             LocalDate fechaAdopcion, EstadoAnimal estadoActual, Long adoptanteId, GeneroAnimal genero) {
@@ -158,10 +160,12 @@ public class AnimalRequestDto {
                 "nombre='" + nombre + '\'' +
                 ", especie='" + especie + '\'' +
                 ", edad=" + edad +
+                ", unidadEdad='" + unidadEdad + '\'' +
                 ", estadoSalud='" + estadoSalud + '\'' +
                 ", fechaAdopcion=" + fechaAdopcion +
                 ", estadoActual=" + estadoActual +
                 ", adoptanteId=" + adoptanteId +
+                ", genero=" + genero +
                 '}';
     }
 }

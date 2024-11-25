@@ -8,7 +8,7 @@ public class AnimalResponseDto {
     private int edad;
     private String unidadEdad; // Campo para la unidad de edad
     private String estadoSalud;
-    private String genero; // Nuevo campo para el género
+    private GeneroAnimal genero; // Nuevo campo para el género
     private Long adoptanteId;
     private EstadoAnimal estadoActual;  // Estado actual del animal
 
@@ -42,7 +42,7 @@ public class AnimalResponseDto {
      * @param adoptanteId   ID del adoptante.
      * @param estadoActual  Estado actual del animal.
      */
-    public AnimalResponseDto(Long id, String nombre, String especie, int edad, String unidadEdad, String estadoSalud, String genero, Long adoptanteId, EstadoAnimal estadoActual) {
+    public AnimalResponseDto(Long id, String nombre, String especie, int edad, String unidadEdad, String estadoSalud, GeneroAnimal genero, Long adoptanteId, EstadoAnimal estadoActual) {
         this.id = id;
         this.nombre = nombre;
         this.especie = especie;
@@ -53,8 +53,6 @@ public class AnimalResponseDto {
         this.adoptanteId = adoptanteId;
         this.estadoActual = estadoActual;
     }
-
-    
 
     // Getters y Setters
 
@@ -106,11 +104,11 @@ public class AnimalResponseDto {
         this.estadoSalud = estadoSalud;
     }
 
-    public String getGenero() {
+    public GeneroAnimal getGenero() {
         return genero;
     }
 
-    public void setGenero(String genero) {
+    public void setGenero(GeneroAnimal genero) {
         this.genero = genero;
     }
 
@@ -139,7 +137,7 @@ public class AnimalResponseDto {
                 ", edad=" + edad +
                 ", unidadEdad='" + unidadEdad + '\'' +
                 ", estadoSalud='" + estadoSalud + '\'' +
-                ", genero='" + genero + '\'' +
+                ", genero=" + genero +
                 ", adoptanteId=" + adoptanteId +
                 ", estadoActual=" + estadoActual +
                 '}';

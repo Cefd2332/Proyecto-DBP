@@ -183,6 +183,7 @@ public class AnimalService {
         responseDto.setEstadoSalud(animal.getEstadoSalud());
         responseDto.setEstadoActual(animal.getEstadoActual());  // Estado actual del animal
         responseDto.setAdoptanteId(animal.getAdoptante().getId());
+        responseDto.setGenero(animal.getGenero());
         return responseDto;
     }
 
