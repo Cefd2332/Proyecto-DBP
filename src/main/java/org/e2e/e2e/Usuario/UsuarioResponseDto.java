@@ -1,3 +1,5 @@
+// src/main/java/org/e2e/e2e/Usuario/UsuarioResponseDto.java
+
 package org.e2e.e2e.Usuario;
 
 import lombok.AllArgsConstructor;
@@ -15,11 +17,11 @@ public class UsuarioResponseDto {
     private String nombre;
     private String email;
     private String direccion;
-    private String token;  // El token JWT
-    private List<String> roles;  // Lista de roles del usuario
+    private List<String> roles;        // Lista de roles del usuario
+    private String fotoPerfilUrl;      // URL de la foto de perfil (si aplica)
+    private String token;              // Token JWT
 
-
-    // Constructor sin token para las respuestas comunes
+    // Constructor sin token y fotoPerfilUrl para respuestas comunes
     public UsuarioResponseDto(Long id, String nombre, String email, String direccion, List<String> roles) {
         this.id = id;
         this.nombre = nombre;
@@ -27,5 +29,4 @@ public class UsuarioResponseDto {
         this.direccion = direccion;
         this.roles = roles;
     }
-
 }

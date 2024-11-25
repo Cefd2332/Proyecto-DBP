@@ -1,11 +1,8 @@
 package org.e2e.e2e.Usuario;
+// src/main/java/org/e2e/e2e/Usuario/Usuario.java
 
 import jakarta.persistence.*;
-import org.e2e.e2e.Notificacion.Notificacion;
-
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -29,15 +26,6 @@ public class Usuario {
 
     @Lob
     private byte[] fotoPerfil;
-
-
-    // Se elimina la relación con animalesAdoptados
-    // @OneToMany(mappedBy = "adoptante", cascade = CascadeType.ALL, orphanRemoval = true)
-    // private List<Animal> animalesAdoptados = new ArrayList<>();
-
-    // Se elimina la relación con notificaciones
-    // @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    // private List<Notificacion> notificaciones = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"))

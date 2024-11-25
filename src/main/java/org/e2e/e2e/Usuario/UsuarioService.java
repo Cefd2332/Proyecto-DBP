@@ -1,3 +1,5 @@
+// src/main/java/org/e2e/e2e/Usuario/UsuarioService.java
+
 package org.e2e.e2e.Usuario;
 
 import io.jsonwebtoken.io.IOException;
@@ -28,6 +30,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Key;
+import java.util.Base64;
 
 @Service
 public class UsuarioService {
@@ -48,7 +51,8 @@ public class UsuarioService {
                           NotificacionPushService notificacionPushService,
                           AdoptanteRepository adoptanteRepository,
                           AnimalRepository animalRepository,
-                          PasswordEncoder passwordEncoder, AlmacenamientoService almacenamientoService) {
+                          PasswordEncoder passwordEncoder,
+                          AlmacenamientoService almacenamientoService) {
         this.usuarioRepository = usuarioRepository;
         this.eventPublisher = eventPublisher;
         this.notificacionPushService = notificacionPushService;
@@ -111,10 +115,12 @@ public class UsuarioService {
         return new AutenticacionResponseDto(usuario.getId());
     }
 
+    /**
+     * Actualizar perfil del usuario sin necesidad de token JWT
+     */
     @Transactional
-    public void actualizarPerfil(String emailUsuarioActual, String nombre, String email, String direccion, MultipartFile fotoPerfil) {
-        Usuario usuario = usuarioRepository.findByEmail(emailUsuarioActual)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado."));
+    public void actualizarPerfil(Long userId, String nombre, String email, String direccion, MultipartFile fotoPerfil) {
+        Usuario usuario = obtenerUsuarioPorId(userId);
 
         // Actualizar nombre
         if (nombre != null && !nombre.isEmpty()) {
@@ -146,7 +152,6 @@ public class UsuarioService {
 
         usuarioRepository.save(usuario);
     }
-
 
     // Cambiar contraseña
     @Transactional

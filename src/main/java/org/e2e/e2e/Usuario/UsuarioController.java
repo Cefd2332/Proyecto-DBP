@@ -1,4 +1,5 @@
 package org.e2e.e2e.Usuario;
+// src/main/java/org/e2e/e2e/Usuario/UsuarioController.java
 
 import jakarta.validation.Valid;
 import org.e2e.e2e.Adoptante.AdoptanteResponseDto;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,13 +28,21 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDto>> obtenerUsuarios() {
         List<UsuarioResponseDto> usuariosResponse = usuarioService.obtenerTodosLosUsuarios().stream()
-                .map(usuario -> new UsuarioResponseDto(
-                        usuario.getId(),
-                        usuario.getNombre(),
-                        usuario.getEmail(),
-                        usuario.getDireccion(),
-                        usuario.getRoles().stream().collect(Collectors.toList())
-                ))
+                .map(usuario -> {
+                    String fotoPerfilUrl = null;
+                    if (usuario.getFotoPerfil() != null && usuario.getFotoPerfil().length > 0) {
+                        String base64Image = Base64.getEncoder().encodeToString(usuario.getFotoPerfil());
+                        fotoPerfilUrl = "data:image/jpeg;base64," + base64Image;
+                    }
+                    return new UsuarioResponseDto(
+                            usuario.getId(),
+                            usuario.getNombre(),
+                            usuario.getEmail(),
+                            usuario.getDireccion(),
+                            usuario.getRoles().stream().collect(Collectors.toList()),
+                            fotoPerfilUrl, fotoPerfilUrl
+                    );
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(usuariosResponse);
     }
@@ -45,12 +55,19 @@ public class UsuarioController {
 
         Usuario usuario = usuarioService.obtenerUsuarioPorEmail(emailUsuarioActual);
 
+        String fotoPerfilUrl = null;
+        if (usuario.getFotoPerfil() != null && usuario.getFotoPerfil().length > 0) {
+            String base64Image = Base64.getEncoder().encodeToString(usuario.getFotoPerfil());
+            fotoPerfilUrl = "data:image/jpeg;base64," + base64Image;
+        }
+
         UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
                 usuario.getId(),
                 usuario.getNombre(),
                 usuario.getEmail(),
                 usuario.getDireccion(),
-                new ArrayList<>(usuario.getRoles())
+                new ArrayList<>(usuario.getRoles()),
+                fotoPerfilUrl, fotoPerfilUrl
         );
 
         return ResponseEntity.ok(usuarioResponse);
@@ -61,43 +78,41 @@ public class UsuarioController {
     public ResponseEntity<UsuarioResponseDto> obtenerUsuarioPorId(@PathVariable Long id) {
         Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
 
+        String fotoPerfilUrl = null;
+        if (usuario.getFotoPerfil() != null && usuario.getFotoPerfil().length > 0) {
+            String base64Image = Base64.getEncoder().encodeToString(usuario.getFotoPerfil());
+            fotoPerfilUrl = "data:image/jpeg;base64," + base64Image;
+        }
+
         UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
                 usuario.getId(),
                 usuario.getNombre(),
                 usuario.getEmail(),
                 usuario.getDireccion(),
-                usuario.getRoles().stream().collect(Collectors.toList())
+                new ArrayList<>(usuario.getRoles()),
+                fotoPerfilUrl, fotoPerfilUrl
         );
 
         return ResponseEntity.ok(usuarioResponse);
     }
 
-    // Actualizar perfil del usuario con manejo de imágenes
+    // Actualizar perfil del usuario sin necesidad de token JWT
     @PutMapping(value = "/perfil", consumes = {"multipart/form-data"})
     public ResponseEntity<String> actualizarPerfil(
+            @RequestParam("userId") Long userId,
             @RequestParam("nombre") String nombre,
             @RequestParam("email") String email,
             @RequestParam("direccion") String direccion,
-            @RequestParam(value = "fotoPerfil", required = false) MultipartFile fotoPerfil,
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @RequestParam(value = "fotoPerfil", required = false) MultipartFile fotoPerfil) {
 
         System.out.println("Nombre recibido: " + nombre);
         System.out.println("Email recibido: " + email);
         System.out.println("Direccion recibida: " + direccion);
         System.out.println("FotoPerfil recibida: " + (fotoPerfil != null ? fotoPerfil.getOriginalFilename() : "Sin foto"));
 
-        // Extraer email desde el token
-        String token = authorizationHeader.replace("Bearer ", "");
-        String emailUsuarioActual = usuarioService.obtenerEmailDesdeToken(token);
-
-        // Logs para depuración
-        System.out.println("Email actual: " + emailUsuarioActual);
-        System.out.println("Email nuevo: " + email);
-
-        usuarioService.actualizarPerfil(emailUsuarioActual, nombre, email, direccion, fotoPerfil);
+        usuarioService.actualizarPerfil(userId, nombre, email, direccion, fotoPerfil);
         return ResponseEntity.ok("Perfil actualizado correctamente.");
     }
-
 
     // Cambiar contraseña
     @PutMapping("/perfil/cambiar-contrasena")
@@ -158,12 +173,19 @@ public class UsuarioController {
     public ResponseEntity<UsuarioResponseDto> obtenerUsuarioPorEmail(@RequestParam String email) {
         Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
 
+        String fotoPerfilUrl = null;
+        if (usuario.getFotoPerfil() != null && usuario.getFotoPerfil().length > 0) {
+            String base64Image = Base64.getEncoder().encodeToString(usuario.getFotoPerfil());
+            fotoPerfilUrl = "data:image/jpeg;base64," + base64Image;
+        }
+
         UsuarioResponseDto usuarioResponse = new UsuarioResponseDto(
                 usuario.getId(),
                 usuario.getNombre(),
                 usuario.getEmail(),
                 usuario.getDireccion(),
-                new ArrayList<>(usuario.getRoles())
+                new ArrayList<>(usuario.getRoles()),
+                fotoPerfilUrl, fotoPerfilUrl
         );
 
         return ResponseEntity.ok(usuarioResponse);
