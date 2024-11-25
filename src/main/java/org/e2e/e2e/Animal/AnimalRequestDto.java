@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
-
 /**
  * DTO para recibir solicitudes relacionadas con la entidad Animal.
  */
@@ -40,6 +39,10 @@ public class AnimalRequestDto {
     @NotNull(message = "El adoptante no puede ser nulo")
     private Long adoptanteId;
 
+    @NotNull(message = "El género no puede estar vacío")
+    private GeneroAnimal genero;
+
+
     // Constructores
 
     /**
@@ -60,7 +63,8 @@ public class AnimalRequestDto {
      * @param estadoActual  Estado actual del animal.
      * @param adoptanteId   ID del adoptante.
      */
-    public AnimalRequestDto(String nombre, String especie, int edad, String unidadEdad, String estadoSalud, LocalDate fechaAdopcion, EstadoAnimal estadoActual, Long adoptanteId) {
+    public AnimalRequestDto(String nombre, String especie, int edad, String unidadEdad, String estadoSalud,
+                            LocalDate fechaAdopcion, EstadoAnimal estadoActual, Long adoptanteId, GeneroAnimal genero) {
         this.nombre = nombre;
         this.especie = especie;
         this.edad = edad;
@@ -69,9 +73,18 @@ public class AnimalRequestDto {
         this.fechaAdopcion = fechaAdopcion;
         this.estadoActual = estadoActual;
         this.adoptanteId = adoptanteId;
+        this.genero = genero; // Nuevo campo
     }
 
     // Getters y Setters
+
+    public GeneroAnimal getGenero() {
+        return genero;
+    }
+
+    public void setGenero(GeneroAnimal genero) {
+        this.genero = genero;
+    }
 
     public String getNombre() {
         return nombre;

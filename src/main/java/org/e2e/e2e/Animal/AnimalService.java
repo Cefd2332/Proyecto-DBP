@@ -61,6 +61,7 @@ public class AnimalService {
         animal.setEstadoSalud(animalDto.getEstadoSalud());
         animal.setFechaAdopcion(animalDto.getFechaAdopcion());
         animal.setEstadoActual(EstadoAnimal.SANO);  // Estado inicial del animal
+        animal.setGenero(animalDto.getGenero()); // Nuevo mapeo
         animal.setAdoptante(adoptante);
 
         Animal animalGuardado = animalRepository.save(animal);

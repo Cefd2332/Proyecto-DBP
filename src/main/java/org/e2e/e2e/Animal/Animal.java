@@ -50,6 +50,10 @@ public class Animal {
     @Column(nullable = false)
     private EstadoAnimal estadoActual;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private GeneroAnimal genero;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "adoptante_id", nullable = false)
     private Adoptante adoptante;
@@ -87,6 +91,14 @@ public class Animal {
     }
 
     // Getters y Setters
+
+    public GeneroAnimal getGenero() {
+        return genero;
+    }
+
+    public void setGenero(GeneroAnimal genero) {
+        this.genero = genero;
+    }
 
     public Long getId() {
         return id;
