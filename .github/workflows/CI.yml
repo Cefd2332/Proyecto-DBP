@@ -69,4 +69,4 @@ jobs:
               -e SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }} \
-              -p 8080:8080 docker login -u cefd23502/proyectdbp:latest
+              -p 8080:8080
