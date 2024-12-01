@@ -60,13 +60,14 @@ jobs:
             docker stop proyectdbp || true
             docker rm proyectdbp || true
             docker run -d --name proyectdbp \
-              -e SPRING_DATASOURCE_HOST=${{ secrets.SPRING_DATASOURCE_HOST }} \
-              -e SPRING_DATASOURCE_PORT=${{ secrets.SPRING_DATASOURCE_PORT }} \
-              -e SPRING_DATASOURCE_DB=${{ secrets.SPRING_DATASOURCE_DB }} \
-              -e SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }} \
-              -e SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
-              -e SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }} \
-              -e SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }} \
-              -p 8080:8080
+              -e SPRING_DATASOURCE_HOST="${{ secrets.SPRING_DATASOURCE_HOST }}" \
+              -e SPRING_DATASOURCE_PORT="${{ secrets.SPRING_DATASOURCE_PORT }}" \
+              -e SPRING_DATASOURCE_DB="${{ secrets.SPRING_DATASOURCE_DB }}" \
+              -e SPRING_DATASOURCE_USERNAME="${{ secrets.SPRING_DATASOURCE_USERNAME }}" \
+              -e SPRING_DATASOURCE_PASSWORD="${{ secrets.SPRING_DATASOURCE_PASSWORD }}" \
+              -e SPRING_MAIL_USERNAME="${{ secrets.SPRING_MAIL_USERNAME }}" \
+              -e SPRING_MAIL_PASSWORD="${{ secrets.SPRING_MAIL_PASSWORD }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e JWT_EXPIRATION="${{ secrets.JWT_EXPIRATION }}" \
+              -p 8080:8080 \
+              cefd23502/proyectdbp:latest
